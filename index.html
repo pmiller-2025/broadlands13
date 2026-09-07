@@ -119,8 +119,6 @@
       display: inline-block; font-size: 0.72rem; padding: 0.15rem 0.45rem;
       border-radius: 999px; background: #243247; color: #d7e6f7; margin: 0 0.25rem 0.35rem 0;
     }
-    .panel .pill.paul { background: #3d2a12; color: #ffd39a; border: 1px solid #a66b1f; }
-    .panel .pill.early { background: #12352a; color: #9ef0c8; border: 1px solid #2d8a62; }
     .sales { list-style: none; padding: 0; margin: 0.4rem 0 0; }
     .sales li {
       border-top: 1px solid var(--border);
@@ -368,7 +366,6 @@
         <span><i class="swatch" style="background:#a855f7"></i>3rd+</span>
         <span><i class="swatch" style="background:#334155"></i>No data</span>
         <span class="sep">|</span>
-        <span><i class="swatch" style="background:#14b8a6; box-shadow:0 0 0 1px #fbbf24"></i>Early ’99</span>
         <span id="legendSelected" class="legend-selected is-empty">
           <i class="swatch" style="background:#38bdf8; box-shadow:0 0 0 1px #fff"></i>
           <span id="legendSelectedAddr">Selected</span>
@@ -591,22 +588,6 @@
       else if (o.era === 'later') fill = '#a855f7';
       else if (o.status === 'no-data') fill = '#334155';
 
-      // Featured parcel (42770 Hollowind): warm fill when owned
-      if (props.highlight === 'paul') {
-        if (o.status === 'owned') fill = '#f59e0b';
-        return {
-          color: '#fff7ed', weight: 3, opacity: 1,
-          fillColor: fill, fillOpacity: 0.75,
-        };
-      }
-      // Early Landino / Gordon: teal + gold outline
-      if (props.highlight === 'early-landino' || props.highlight === 'early-gordon') {
-        if (o.era === 'original') fill = '#14b8a6';
-        return {
-          color: '#fbbf24', weight: 2.5, opacity: 1,
-          fillColor: fill, fillOpacity: 0.72,
-        };
-      }
       return {
         color: '#0b1220', weight: 1.2, opacity: 0.9,
         fillColor: fill, fillOpacity: 0.65,
@@ -813,8 +794,6 @@
       updateLegendSelected(p);
       const o = ownerAsOf(p, currentYear);
       const pills = [];
-      if (p.highlight === 'early-landino') pills.push('<span class="pill early">Early sale · Landino · 1999-09-03</span>');
-      if (p.highlight === 'early-gordon') pills.push('<span class="pill early">Early sale · Gordon · 1999-09-03</span>');
       if (o.era === 'original') pills.push('<span class="pill">Originaler as of ' + currentYear + '</span>');
       if (o.era === 'second') pills.push('<span class="pill">2nd owner as of ' + currentYear + '</span>');
       if (o.era === 'later') pills.push('<span class="pill">Owner #' + o.ownerNum + ' as of ' + currentYear + '</span>');
