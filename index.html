@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Broadlands Section 13 — Ownership Timeline</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #1a2332;
+      --text: #e7ecf3;
+      --muted: #9aa8bc;
+      --accent: #5b9fd4;
+      --border: #2a3a4f;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); }
+    #app { display: grid; grid-template-rows: auto 1fr auto auto; height: 100%; }
+    header {
+      padding: 0.45rem 0.85rem;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem; align-items: baseline;
+    }
+    header h1 { font-size: 1.05rem; margin: 0; font-weight: 650; letter-spacing: 0.01em; }
+    header .sub { color: var(--muted); font-size: 0.82rem; }
+    #map { width: 100%; height: 100%; min-height: 320px; background: #1c2836; }
+    .scrubber {
+      background: var(--panel);
+      border-top: 1px solid var(--border);
+      padding: 0.45rem 0.85rem 0.5rem;
+      display: grid;
+      gap: 0.35rem;
+    }
+    .scrubber-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 0.55rem;
+      align-items: center;
+    }
+    .scrubber-btns { display: flex; gap: 0.3rem; align-items: center; }
+    .scrubber input[type=range] { width: 100%; accent-color: var(--accent); margin: 0; }
+    .timeline { position: relative; width: 100%; padding-bottom: 0.85rem; }
+    .year-ticks {
+      position: absolute; left: 0; right: 0; top: 0.95rem;
+      height: 0.85rem; pointer-events: none;
+    }
+    .year-ticks .tick {
+      position: absolute; transform: translateX(-50%);
+      text-align: center; color: var(--muted); font-size: 0.62rem;
+      font-variant-numeric: tabular-nums; line-height: 1;
+    }
+    .year-ticks .tick::before {
+      content: ""; display: block; width: 1px; height: 5px;
+      background: #5b6f88; margin: 0 auto 1px;
+    }
+    .year-ticks .tick.major { color: #cfe6ff; font-weight: 650; }
+    .year-ticks .tick.major::before { height: 7px; background: #8eb6d8; width: 2px; }
+    .year-ticks .tick.start { transform: translateX(0); text-align: left; }
+    .year-ticks .tick.start::before { margin-left: 0; }
+    .year-ticks .tick.end { transform: translateX(-100%); text-align: right; }
+    .year-ticks .tick.end::before { margin-left: auto; margin-right: 0; }
+    .year-pick {
+      display: flex; flex-direction: column; gap: 0.1rem; min-width: 6.8rem;
+    }
+    .year-pick label {
+      font-size: 0.62rem; color: var(--muted); text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .year-pick select {
+      background: #0f1419; color: #cfe6ff; border: 1px solid var(--border);
+      border-radius: 6px; padding: 0.28rem 0.4rem; font-size: 0.88rem;
+      font-weight: 650; font-variant-numeric: tabular-nums;
+    }
+    .year-summary {
+      font-size: 0.72rem; color: var(--muted); line-height: 1.3;
+      white-space: nowrap; overflow-x: auto; padding: 0.15rem 0;
+    }
+    .year-summary strong { color: #cfe6ff; }
+    .legend-row {
+      display: flex; flex-wrap: wrap; gap: 0.25rem 0.75rem;
+      align-items: center; font-size: 0.7rem; color: var(--muted);
+    }
+    .legend-row .sep {
+      color: var(--border); margin: 0 0.1rem;
+    }
+    .legend-selected.is-empty { opacity: 0.55; }
+    .legend-selected #legendSelectedAddr {
+      max-width: 14rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .howto {
+      display: none; /* keep in DOM for screen readers via title on scrubber if needed */
+    }
+    button.play {
+      background: #243247; color: var(--text); border: 1px solid var(--border);
+      border-radius: 6px; padding: 0.28rem 0.5rem; cursor: pointer; font-size: 0.78rem;
+    }
+    button.play:hover { background: #2d3e55; }
+    .swatch {
+      display: inline-block; width: 10px; height: 10px; border-radius: 2px;
+      flex: 0 0 10px; border: 1px solid rgba(255,255,255,0.25);
+      margin-right: 0.25rem; vertical-align: -1px;
+    }
+    .panel {
+      position: absolute; z-index: 1000; top: 12px; right: 12px;
+      width: min(340px, calc(100vw - 24px));
+      background: rgba(26, 35, 50, 0.96);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem 0.95rem;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+      max-height: calc(100% - 24px);
+      overflow: auto;
+    }
+    .panel h2 { margin: 0 0 0.35rem; font-size: 0.98rem; }
+    .panel .meta { color: var(--muted); font-size: 0.78rem; margin-bottom: 0.65rem; }
+    .panel .pill {
+      display: inline-block; font-size: 0.72rem; padding: 0.15rem 0.45rem;
+      border-radius: 999px; background: #243247; color: #d7e6f7; margin: 0 0.25rem 0.35rem 0;
+    }
+    .panel .pill.paul { background: #3d2a12; color: #ffd39a; border: 1px solid #a66b1f; }
+    .panel .pill.early { background: #12352a; color: #9ef0c8; border: 1px solid #2d8a62; }
+    .sales { list-style: none; padding: 0; margin: 0.4rem 0 0; }
+    .sales li {
+      border-top: 1px solid var(--border);
+      padding: 0.45rem 0;
+      font-size: 0.82rem;
+    }
+    .sales .when { color: #b9d7f5; font-variant-numeric: tabular-nums; }
+    .sales .buyer { margin-top: 0.15rem; }
+    .sales .price { display: none; color: var(--muted); margin-top: 0.25rem; }
+    body.prices-on .sales .price { display: block; }
+    .sale-row-top {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 0.4rem;
+    }
+    .sale-row-top .when-buyer { min-width: 0; flex: 1; }
+
+    .hint { color: var(--muted); font-size: 0.8rem; }
+    .stats { font-size: 0.78rem; color: var(--muted); margin-top: 0.35rem; }
+    button.play {
+      background: #243247; color: var(--text); border: 1px solid var(--border);
+      border-radius: 6px; padding: 0.35rem 0.65rem; cursor: pointer; font-size: 0.82rem;
+    }
+    button.play:hover { background: #2d3e55; }
+    .search-bar {
+      display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center;
+      margin-left: auto;
+      background: #121c2a;
+      border: 1px solid #3d6a9a;
+      border-radius: 10px;
+      padding: 0.45rem 0.65rem;
+      box-shadow: 0 0 0 1px rgba(91,159,212,0.15), 0 4px 16px rgba(0,0,0,0.25);
+      max-width: min(420px, 100%);
+    }
+    .search-bar .search-label {
+      font-size: 0.72rem; font-weight: 700; color: #9ec9f0;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      width: 100%;
+    }
+    .search-bar input {
+      flex: 1 1 10rem;
+      background: #0f1419; color: var(--text);
+      border: 1px solid #5b9fd4;
+      border-radius: 6px; padding: 0.45rem 0.65rem; font-size: 0.92rem; min-width: 10rem;
+    }
+    .search-bar input:focus {
+      outline: none; border-color: #93c5fd;
+      box-shadow: 0 0 0 2px rgba(147,197,253,0.25);
+    }
+    .search-bar input::placeholder { color: #7a8aa0; }
+    .search-bar #nameSearchBtn {
+      background: #2d6aa8; border-color: #4d8fd4; font-weight: 650;
+      padding: 0.45rem 0.75rem;
+    }
+    .search-bar #nameSearchBtn:hover { background: #3a7abf; }
+    .search-results {
+      width: 100%; font-size: 0.78rem; color: var(--muted); margin-top: 0.1rem;
+    }
+    .search-results strong { color: #cfe6ff; }
+    .search-hit {
+      cursor: pointer; color: #9ec9f0; text-decoration: underline; margin-right: 0.55rem;
+    }
+    .search-hit:hover { color: #fff; }
+    #pwGate {
+      position: fixed; inset: 0; z-index: 10000;
+      background: #0f1419; display: flex; align-items: center; justify-content: center;
+      padding: 1.25rem;
+    }
+    #pwGate.hidden { display: none; }
+    #pwGate .card {
+      width: min(360px, 100%); background: #1a2332; border: 1px solid #2a3a4f;
+      border-radius: 12px; padding: 1.25rem 1.35rem; box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    }
+    #pwGate h1 { font-size: 1.05rem; margin: 0 0 0.35rem; }
+    #pwGate p { color: #9aa8bc; font-size: 0.85rem; margin: 0 0 0.9rem; }
+    #pwGate input {
+      width: 100%; background: #0f1419; color: #e7ecf3; border: 1px solid #2a3a4f;
+      border-radius: 6px; padding: 0.5rem 0.65rem; font-size: 0.95rem; margin-bottom: 0.55rem;
+    }
+    #pwGate button {
+      width: 100%; background: #2d4a6f; color: #e7ecf3; border: 1px solid #3d5f8a;
+      border-radius: 6px; padding: 0.5rem 0.65rem; font-size: 0.9rem; cursor: pointer;
+    }
+    #pwGate button:hover { background: #35567f; }
+    #pwGate .err { color: #fca5a5; font-size: 0.8rem; min-height: 1.2em; margin: 0.35rem 0 0; }
+    #app.locked { visibility: hidden; height: 100%; overflow: hidden; }
+    #srcBtn {
+      position: absolute; z-index: 1000; left: 12px; bottom: 12px;
+      background: rgba(26, 35, 50, 0.96); color: var(--text);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 0.4rem 0.7rem; font-size: 0.8rem; cursor: pointer;
+    }
+    #srcBtn:hover { background: #243247; }
+    #srcModal {
+      display: none; position: absolute; z-index: 1100; left: 12px; bottom: 52px;
+      width: min(420px, calc(100vw - 24px));
+      background: rgba(26, 35, 50, 0.98); border: 1px solid var(--border);
+      border-radius: 10px; padding: 0.9rem 1rem; box-shadow: 0 8px 28px rgba(0,0,0,0.4);
+      max-height: min(70vh, 480px); overflow: auto; font-size: 0.82rem; line-height: 1.45;
+    }
+    #srcModal.open { display: block; }
+    #srcModal h3 { margin: 0 0 0.45rem; font-size: 0.95rem; }
+    #srcModal h4 { margin: 0.75rem 0 0.3rem; font-size: 0.8rem; color: #cfe6ff; text-transform: uppercase; letter-spacing: 0.04em; }
+    #srcModal p, #srcModal li { color: var(--muted); margin: 0 0 0.45rem; }
+    #srcModal ul { margin: 0.2rem 0 0.5rem; padding-left: 1.1rem; }
+    #srcModal a { color: #9ec9f0; }
+    #srcModal .close {
+      float: right; background: transparent; border: none; color: var(--muted);
+      cursor: pointer; font-size: 1.1rem; line-height: 1; padding: 0 0.2rem;
+    }
+    .search-match-outline {
+      /* used via setStyle when searching */
+    }
+    .leaflet-container { font: inherit; }
+    .leaflet-control-layers {
+      background: rgba(26, 35, 50, 0.96);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .leaflet-control-layers-expanded { padding: 0.45rem 0.55rem; }
+    .leaflet-control-layers label { font-size: 0.82rem; }
+    #satDateBadge {
+      position: absolute; z-index: 1000; top: 78px; left: 10px;
+      background: rgba(26, 35, 50, 0.96); color: #cfe6ff;
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 0.3rem 0.55rem; font-size: 0.72rem; line-height: 1.25;
+      max-width: 11rem; pointer-events: none;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+    }
+    #satDateBadge.hidden { display: none; }
+    #logoutBtn {
+      margin-left: 0.35rem;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+    #logoutBtn:hover { color: var(--text); }
+
+    #satDateBadge .lbl { color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.62rem; }
+    #satDateBadge .val { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+    .sales-feed {
+      display: none;
+      background: #121a24;
+      border-top: 1px solid var(--border);
+      padding: 0.35rem 0.85rem;
+    }
+    body.prices-on .sales-feed { display: block; }
+    .sales-feed .latest {
+      font-size: 0.78rem; color: var(--muted); line-height: 1.35;
+      white-space: nowrap; overflow-x: auto;
+    }
+    .sales-feed .latest strong { color: #cfe6ff; }
+    .sales-feed .latest .amt { color: #86efac; }
+    .sales-feed .latest .name { color: #e7ecf3; font-weight: 650; }
+    .sales-feed .latest .addr {
+      color: var(--accent); cursor: pointer;
+      text-decoration: underline; text-underline-offset: 2px;
+    }
+    .sales-feed .latest .addr:hover { color: #9ec9ef; }
+
+    .parcel-label {
+      background: transparent; border: none; box-shadow: none;
+      color: #fff; font-weight: 700; font-size: 11px; text-shadow: 0 1px 2px #000, 0 0 4px #000;
+    }
+  </style>
+</head>
+<body>
+  <div id="pwGate" role="dialog" aria-label="Password">
+    <div class="card">
+      <h1>Section 13 map</h1>
+      <p>Shared password required. For neighbors and family — not a bank vault.</p>
+      <input id="pwInput" type="password" placeholder="Password" autocomplete="current-password" />
+      <button type="button" id="pwBtn">Enter</button>
+      <p class="err" id="pwErr"></p>
+    </div>
+  </div>
+  <div id="app" class="locked">
+    <header>
+      <h1>Broadlands Section 13 — Parcel Ownership Timeline</h1>
+      <span class="sub">Ashburn, VA · Loudoun County parcels + first-sale / resale history</span>
+      <button type="button" class="play" id="logoutBtn" title="Sign out and re-enter password">Log out</button>
+      <div class="search-bar" role="search">
+        <div class="search-label">Search by last name</div>
+        <input id="nameSearch" type="search" placeholder="e.g. Miller, Gordon, Landino…" autocomplete="off" aria-label="Search by last name" />
+        <button class="play" id="nameSearchBtn" type="button">Find</button>
+        <div class="search-results" id="searchResults">Type a last name, then Find — matching parcels glow pink.</div>
+      </div>
+    </header>
+    <div style="position:relative; min-height:0;">
+      <div id="map"></div>
+      <div id="satDateBadge" class="hidden" aria-live="polite"><div class="lbl">Satellite imagery</div><div class="val" id="satDateVal">—</div></div>
+      <button type="button" id="srcBtn" title="Data sources and disclosure">Sources</button>
+      <div id="srcModal" role="dialog" aria-label="Sources and disclosure">
+        <button type="button" class="close" id="srcClose" aria-label="Close">×</button>
+        <h3>Sources &amp; disclosure</h3>
+        <p><strong style="color:var(--text)">All data on this map was compiled from publicly available sources.</strong> This is a personal hobby visualization — not an official county product, not a title search, and not legal advice. Always verify with Loudoun County records before relying on any sale, owner, or boundary detail.</p>
+        <h4>Parcel boundaries</h4>
+        <ul>
+          <li>Loudoun County GIS — Land Records / Parcel Boundaries (<code>PA_SUBD_NAME='BROADLANDS'</code> and <code>PA_SUBD_SECT='13'</code>)</li>
+          <li>Service: <a href="https://logis.loudoun.gov/gis/rest/services/COL/LandRecords/MapServer/5" target="_blank" rel="noopener">logis.loudoun.gov … LandRecords/MapServer/5</a></li>
+        </ul>
+        <h4>Sales &amp; ownership history</h4>
+        <ul>
+          <li>Loudoun County real estate / tax assessment sales history (public parcel records)</li>
+          <li>County assessment &amp; land records portals (Loudoun Online Tax System / LandMARC where used for deed context)</li>
+        </ul>
+        <h4>Basemap</h4>
+        <ul>
+          <li>Streets: © OpenStreetMap contributors</li>
+          <li>Satellite: Esri World Imagery <em>Wayback</em> archive — imagery release tracks the scrubber year (archive from ~2014; earlier years use the oldest available vintage)</li>
+        </ul>
+        <h4>Notes</h4>
+        <ul>
+          <li>Ownership eras are inferred from recorded sale/deed rows we pulled; <code>$0</code> / trust transfers still count as owner-era changes.</li>
+          <li>Scrubber is year-level (end of year), not day-level.</li>
+          <li>A few GIS parcels may lack matching sales rows in the local extract.</li>
+        </ul>
+      </div>
+      <aside class="panel" id="detail">
+        <p class="hint">Click a parcel to inspect it. See the how-to strip at the bottom of the screen.</p>
+        <div class="stats" id="stats"></div>
+      </aside>
+    </div>
+    <div class="scrubber">
+      <div class="scrubber-row">
+        <div class="scrubber-btns">
+          <button class="play" id="playBtn" type="button" title="Animate years">▶</button>
+          <button class="play" id="rotateLeftBtn" type="button" title="Rotate left 45°">↺</button>
+          <button class="play" id="rotateRightBtn" type="button" title="Rotate right 45°">↻</button>
+          <button class="play" id="rotateResetBtn" type="button" title="Reset north-up">N</button>
+        </div>
+        <div class="timeline">
+          <input id="yearRange" type="range" min="1999" max="2026" step="1" value="1999" aria-label="Year timeline" />
+          <div class="year-ticks" id="yearTicks" aria-hidden="true"></div>
+        </div>
+        <div class="year-pick">
+          <label for="yearSelect">Select a year</label>
+          <select id="yearSelect" aria-label="Select a year"></select>
+        </div>
+      </div>
+      <div class="year-summary" id="yearSummary"></div>
+      <div class="legend-row" title="Scrub/pick year · click parcel · search last name · Streets/Satellite · rotate · Sources">
+        <span><i class="swatch" style="background:#6b7280"></i>Unsold</span>
+        <span><i class="swatch" style="background:#22c55e"></i>Originalers</span>
+        <span><i class="swatch" style="background:#3b82f6"></i>2nd</span>
+        <span><i class="swatch" style="background:#a855f7"></i>3rd+</span>
+        <span><i class="swatch" style="background:#334155"></i>No data</span>
+        <span class="sep">|</span>
+        <span><i class="swatch" style="background:#14b8a6; box-shadow:0 0 0 1px #fbbf24"></i>Early ’99</span>
+        <span id="legendSelected" class="legend-selected is-empty">
+          <i class="swatch" style="background:#38bdf8; box-shadow:0 0 0 1px #fff"></i>
+          <span id="legendSelectedAddr">Selected</span>
+        </span>
+        <span><i class="swatch" style="background:#fb7185; box-shadow:0 0 0 1px #ff2d95"></i>Search</span>
+      </div>
+    </div>
+    <div class="sales-feed" id="salesFeed" aria-label="Latest sale">
+      <div class="latest" id="latestSale">Latest sale: —</div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-rotate@0.2.8/dist/leaflet-rotate.js"></script>
+  <script src="data.js"></script>
+  <script>
+
+    const PW_HASH = "6f0bbe98f934f832f1367b24c3df2d58cd067a2836840c5eb02ba05f9c837d97"; // Broadlands13 — map + median only
+    const PRICE_PW_HASH = "fb8dc6a9aa83d07d38f94d99b0b0b4c686ba54d10009a43d648191821cab0ce7"; // Broadlands13$$ — map + all sale amounts
+    const PW_KEY = "sec13_unlocked_v1";
+    const PRICE_KEY = "sec13_prices_unlocked_v1";
+
+    async function sha256Hex(text) {
+      const data = new TextEncoder().encode(text);
+      const buf = await crypto.subtle.digest("SHA-256", data);
+      return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    function pricesUnlocked() {
+      return sessionStorage.getItem(PRICE_KEY) === "1";
+    }
+
+    function applyPriceMode() {
+      document.body.classList.toggle("prices-on", pricesUnlocked());
+      try {
+        if (typeof renderSalesFeed === "function" && pricesUnlocked()) renderSalesFeed();
+      } catch (e) {}
+      try {
+        if (typeof selectedLayer !== "undefined" && selectedLayer && typeof showDetail === "function") {
+          showDetail(selectedLayer.feature.properties, selectedLayer);
+        }
+      } catch (e) {}
+    }
+
+    async function tryUnlock(pw) {
+      const h = await sha256Hex(pw);
+      let ok = false;
+      let withPrices = false;
+      if (h === PRICE_PW_HASH) {
+        ok = true;
+        withPrices = true;
+      } else if (h === PW_HASH) {
+        ok = true;
+        withPrices = false;
+      }
+      if (!ok) return false;
+      sessionStorage.setItem(PW_KEY, "1");
+      if (withPrices) sessionStorage.setItem(PRICE_KEY, "1");
+      else sessionStorage.removeItem(PRICE_KEY);
+      document.getElementById("pwGate").classList.add("hidden");
+      document.getElementById("app").classList.remove("locked");
+      applyPriceMode();
+      setTimeout(() => { try { map.invalidateSize(); } catch (e) {} }, 50);
+      return true;
+    }
+
+
+    function doLogout() {
+      sessionStorage.removeItem(PW_KEY);
+      sessionStorage.removeItem(PRICE_KEY);
+      document.body.classList.remove("prices-on");
+      document.getElementById("app").classList.add("locked");
+      document.getElementById("pwGate").classList.remove("hidden");
+      const inp = document.getElementById("pwInput");
+      const err = document.getElementById("pwErr");
+      if (err) err.textContent = "";
+      if (inp) { inp.value = ""; setTimeout(() => inp.focus(), 50); }
+    }
+
+    (function initGate() {
+      const gate = document.getElementById("pwGate");
+      const app = document.getElementById("app");
+      if (sessionStorage.getItem(PW_KEY) === "1") {
+        gate.classList.add("hidden");
+        app.classList.remove("locked");
+        applyPriceMode();
+      }
+      const go = async () => {
+        const ok = await tryUnlock(document.getElementById("pwInput").value || "");
+        document.getElementById("pwErr").textContent = ok ? "" : "Nope — try again.";
+      };
+      document.getElementById("pwBtn").addEventListener("click", go);
+      document.getElementById("pwInput").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") go();
+      });
+      const lo = document.getElementById("logoutBtn");
+      if (lo) lo.addEventListener("click", doLogout);
+    })();
+
+    const map = L.map('map', { zoomControl: true, maxZoom: 22, rotate: true, bearing: 0, rotateControl: false });
+
+    const streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap · Parcels: Loudoun County GIS',
+      maxZoom: 22,
+      maxNativeZoom: 19,
+    });
+
+    // Esri World Imagery Wayback — release # per year (imagery archive updates with scrubber)
+    const WAYBACK_BY_YEAR = {"2014": 5844, "2015": 28163, "2016": 18966, "2017": 25521, "2018": 23448, "2019": 4756, "2020": 29260, "2021": 26120, "2022": 45134, "2023": 56102, "2024": 16453, "2025": 13192, "2026": 26334};
+    const WAYBACK_DATE_BY_YEAR = {"2014": "2014-12-30", "2015": "2015-12-16", "2016": "2016-12-20", "2017": "2017-11-16", "2018": "2018-12-14", "2019": "2019-12-12", "2020": "2020-12-16", "2021": "2021-12-21", "2022": "2022-12-14", "2023": "2023-12-07", "2024": "2024-12-12", "2025": "2025-12-18", "2026": "2026-08-05"};
+    const WAYBACK_YEARS = Object.keys(WAYBACK_BY_YEAR).map(Number).sort((a,b)=>a-b);
+    function waybackReleaseForYear(y) {
+      if (WAYBACK_BY_YEAR[y]) return WAYBACK_BY_YEAR[y];
+      if (y < WAYBACK_YEARS[0]) return WAYBACK_BY_YEAR[WAYBACK_YEARS[0]];
+      return WAYBACK_BY_YEAR[WAYBACK_YEARS[WAYBACK_YEARS.length - 1]];
+    }
+    function waybackDateLabelForYear(y) {
+      y = +y;
+      if (WAYBACK_DATE_BY_YEAR[y]) return WAYBACK_DATE_BY_YEAR[y];
+      if (y < WAYBACK_YEARS[0]) return WAYBACK_DATE_BY_YEAR[WAYBACK_YEARS[0]] + ' (oldest)';
+      return WAYBACK_DATE_BY_YEAR[WAYBACK_YEARS[WAYBACK_YEARS.length - 1]];
+    }
+    function updateSatDateBadge(y) {
+      const badge = document.getElementById('satDateBadge');
+      const val = document.getElementById('satDateVal');
+      if (!badge || !val) return;
+      const onSat = map.hasLayer(satelliteGroup);
+      if (!onSat) {
+        badge.classList.add('hidden');
+        return;
+      }
+      badge.classList.remove('hidden');
+      const label = waybackDateLabelForYear(y);
+      const scrub = +y;
+      let note = label;
+      if (scrub < WAYBACK_YEARS[0]) note = label + ' · archive starts 2014';
+      val.textContent = note;
+    }
+    function waybackUrl(releaseNum) {
+      return `https://wayback.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/WMTS/1.0.0/default028mm/MapServer/tile/${releaseNum}/{z}/{y}/{x}`;
+    }
+
+    const satAttrs = {
+      attribution: 'Esri World Imagery Wayback · Parcels: Loudoun County GIS',
+      maxZoom: 22,
+      maxNativeZoom: 19,
+    };
+    let satelliteRelease = waybackReleaseForYear(1999);
+    // Keep showing current aerial until the next vintage has loaded (no blackout, no fade)
+    let satShowing = L.tileLayer(waybackUrl(satelliteRelease), { ...satAttrs, opacity: 1 });
+    let satLoading = L.tileLayer(waybackUrl(satelliteRelease), { ...satAttrs, opacity: 0 });
+    const satelliteGroup = L.layerGroup([satShowing, satLoading]);
+    let satLoadToken = 0;
+
+    function syncSatelliteToYear(y) {
+      updateSatDateBadge(y);
+      const rel = waybackReleaseForYear(+y);
+      if (rel === satelliteRelease) return;
+      const token = ++satLoadToken;
+      satelliteRelease = rel;
+      // Load next vintage underneath/invisible; old stays fully visible
+      satLoading.off('load');
+      satLoading.setOpacity(0);
+      satLoading.setUrl(waybackUrl(rel));
+      const finish = () => {
+        if (token !== satLoadToken) return; // a newer year won the race
+        satLoading.setOpacity(1);
+        satShowing.setOpacity(0);
+        // Swap roles for the next change
+        const tmp = satShowing;
+        satShowing = satLoading;
+        satLoading = tmp;
+        satLoading.setOpacity(0);
+      };
+      satLoading.once('load', finish);
+      // If tiles are cached, 'load' may have already fired — nudge
+      setTimeout(() => {
+        if (token !== satLoadToken) return;
+        if (satLoading._loading === false || satLoading._tilesToLoad === 0) finish();
+      }, 50);
+    }
+
+    streets.addTo(map);
+    L.control.layers(
+      { 'Streets': streets, 'Satellite (by year)': satelliteGroup },
+      null,
+      { position: 'topleft', collapsed: false }
+    ).addTo(map);
+    map.on('baselayerchange', () => updateSatDateBadge(typeof currentYear === 'number' ? currentYear : 1999));
+
+    function ownerAsOf(props, yearEnd) {
+      // yearEnd = YYYY as of Dec 31 of that year
+      const cutoff = `${yearEnd}-12-31`;
+      const sales = props.sales || [];
+      if (!sales.length) return { status: 'no-data', owner: null, saleIndex: -1, era: null };
+      let idx = -1;
+      for (let i = 0; i < sales.length; i++) {
+        if (sales[i].date <= cutoff) idx = i;
+        else break;
+      }
+      if (idx < 0) return { status: 'unsold', owner: null, saleIndex: -1, era: 'unsold' };
+      const sale = sales[idx];
+      const ownerNum = idx + 1; // 1 = original buyer at first sale
+      return {
+        status: 'owned',
+        owner: sale.buyer,
+        saleIndex: idx,
+        ownerNum,
+        sale,
+        era: ownerNum === 1 ? 'original' : (ownerNum === 2 ? 'second' : 'later'),
+      };
+    }
+
+    function styleFor(props, year) {
+      const o = ownerAsOf(props, year);
+      let fill = '#334155';
+      if (o.era === 'unsold') fill = '#6b7280';
+      else if (o.era === 'original') fill = '#22c55e';
+      else if (o.era === 'second') fill = '#3b82f6';
+      else if (o.era === 'later') fill = '#a855f7';
+      else if (o.status === 'no-data') fill = '#334155';
+
+      // Featured parcel (42770 Hollowind): warm fill when owned
+      if (props.highlight === 'paul') {
+        if (o.status === 'owned') fill = '#f59e0b';
+        return {
+          color: '#fff7ed', weight: 3, opacity: 1,
+          fillColor: fill, fillOpacity: 0.75,
+        };
+      }
+      // Early Landino / Gordon: teal + gold outline
+      if (props.highlight === 'early-landino' || props.highlight === 'early-gordon') {
+        if (o.era === 'original') fill = '#14b8a6';
+        return {
+          color: '#fbbf24', weight: 2.5, opacity: 1,
+          fillColor: fill, fillOpacity: 0.72,
+        };
+      }
+      return {
+        color: '#0b1220', weight: 1.2, opacity: 0.9,
+        fillColor: fill, fillOpacity: 0.65,
+      };
+    }
+
+    let selectedLayer = null;
+    let currentYear = 1999;
+    let searchHits = [];
+    let playTimer = null;
+
+    const layer = L.geoJSON(PARCEL_DATA, {
+      style: (feat) => styleFor(feat.properties, currentYear),
+      onEachFeature: (feat, lyr) => {
+        const p = feat.properties;
+        const label = (p.address || `Lot ${p.lot || '?'}`).replace(/ HOLLOWIND CT.*/, ' Hollowind')
+          .replace(/ EVENING BREEZE CT.*/, ' Eve. Breeze')
+          .replace(/ STILLBROOK FARM DR.*/, ' Stillbrook');
+        lyr.bindTooltip(label, { sticky: true, opacity: 0.95 });
+        lyr.on('click', () => showDetail(p, lyr));
+      },
+    }).addTo(map);
+
+    map.fitBounds(layer.getBounds(), { padding: [16, 16], maxZoom: 17 });
+
+    function lastNamesFromBuyer(buyer) {
+      if (!buyer) return [];
+      const names = new Set();
+      const upper = String(buyer).toUpperCase();
+      // Primary: LAST, FIRST ...
+      const beforeComma = upper.split(',')[0].trim();
+      if (beforeComma) {
+        beforeComma.split(/\s+/).forEach((w) => {
+          if (w && !['TR', 'TRUST', 'REV', 'REVOCABLE', 'LIVING', 'FAMILY', 'THE', 'AND', '&'].includes(w)) {
+            names.add(w.replace(/[^A-Z\-']/g, ''));
+          }
+        });
+      }
+      // Also tokens after & that look like LAST FIRST (e.g. SINGH, MALVIKA) already handled by comma split of full string parts
+      upper.split('&').forEach((part) => {
+        const chunk = part.trim();
+        if (!chunk) return;
+        if (chunk.includes(',')) {
+          const ln = chunk.split(',')[0].trim().split(/\s+/)[0];
+          if (ln) names.add(ln.replace(/[^A-Z\-']/g, ''));
+        } else {
+          // "... & JESSICA CHESTNUT" — last token is often last name
+          const toks = chunk.split(/\s+/).filter(Boolean);
+          if (toks.length >= 2) {
+            const last = toks[toks.length - 1].replace(/[^A-Z\-']/g, '');
+            if (last && last.length > 1) names.add(last);
+          }
+        }
+      });
+      return [...names].filter(Boolean);
+    }
+
+    function parcelMatchesLastName(props, q) {
+      const needle = q.trim().toUpperCase().replace(/[^A-Z\-']/g, '');
+      if (!needle) return { match: false, hits: [] };
+      const hits = [];
+      (props.sales || []).forEach((s) => {
+        const lns = lastNamesFromBuyer(s.buyer);
+        if (lns.some((ln) => ln === needle || ln.startsWith(needle))) {
+          hits.push(s);
+        }
+      });
+      return { match: hits.length > 0, hits };
+    }
+
+    function runNameSearch() {
+      const q = document.getElementById('nameSearch').value || '';
+      const out = document.getElementById('searchResults');
+      searchHits = [];
+      if (!q.trim()) {
+        out.textContent = 'Type a last name, then Find — matching parcels glow pink.';
+        searchHits = [];
+        refreshStyles();
+        return;
+      }
+      const layers = [];
+      layer.eachLayer((lyr) => {
+        const r = parcelMatchesLastName(lyr.feature.properties, q);
+        if (r.match) {
+          layers.push({ lyr, sales: r.hits, props: lyr.feature.properties });
+        }
+      });
+      searchHits = layers;
+      refreshStyles();
+
+      if (!layers.length) {
+        out.innerHTML = `No parcels with last name <strong>${esc(q.trim())}</strong>.`;
+        return;
+      }
+
+      // Summary
+      const addrs = layers.map((h) => h.props.address || ('Lot ' + (h.props.lot || '?')));
+      const firstSale = layers.flatMap((h) => h.sales).map((s) => s.date).sort()[0];
+      const lastSale = layers.flatMap((h) => h.sales).map((s) => s.date).sort().slice(-1)[0];
+      const short = (a) => (a || '').replace(/ HOLLOWIND CT.*/i, ' Hollowind')
+        .replace(/ EVENING BREEZE CT.*/i, ' Eve. Breeze')
+        .replace(/ STILLBROOK FARM DR.*/i, ' Stillbrook');
+
+      let html = `<strong>${layers.length}</strong> parcel${layers.length === 1 ? '' : 's'} for <strong>${esc(q.trim())}</strong>`;
+      html += ` · ${layers.reduce((n, h) => n + h.sales.length, 0)} matching sale${layers.reduce((n, h) => n + h.sales.length, 0) === 1 ? '' : 's'}`;
+      if (firstSale) html += ` · ${esc(firstSale)}–${esc(lastSale)}`;
+      html += '<br>';
+      layers.forEach((h, i) => {
+        const label = short(h.props.address || ('Lot ' + (h.props.lot || '?')));
+        html += `<span class="search-hit" data-idx="${i}">${esc(label)}</span>`;
+      });
+      out.innerHTML = html;
+
+      out.querySelectorAll('.search-hit').forEach((el) => {
+        el.addEventListener('click', () => {
+          const hit = searchHits[+el.getAttribute('data-idx')];
+          if (!hit) return;
+          showDetail(hit.props, hit.lyr);
+          map.fitBounds(hit.lyr.getBounds(), { padding: [40, 40], maxZoom: 19 });
+        });
+      });
+
+      // Zoom to all hits
+      const group = L.featureGroup(layers.map((h) => h.lyr));
+      map.fitBounds(group.getBounds(), { padding: [40, 40], maxZoom: 18 });
+      if (layers.length === 1) showDetail(layers[0].props, layers[0].lyr);
+    }
+
+    document.getElementById('nameSearchBtn').addEventListener('click', runNameSearch);
+    document.getElementById('nameSearch').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') runNameSearch();
+    });
+
+
+    function refreshStyles() {
+      const hitSet = new Set(searchHits.map((h) => h.lyr));
+      layer.eachLayer((lyr) => {
+        const base = styleFor(lyr.feature.properties, currentYear);
+        const isSelected = selectedLayer === lyr;
+        const isHit = hitSet.has(lyr);
+        if (isSelected) {
+          // Loud selection: thick white + cyan halo feel via bright stroke
+          lyr.setStyle({
+            ...base,
+            color: '#ffffff',
+            weight: 5,
+            opacity: 1,
+            fillColor: '#38bdf8',
+            fillOpacity: 0.85,
+          });
+          if (lyr.bringToFront) lyr.bringToFront();
+        } else if (isHit) {
+          // Search hits: hot pink outline, bright fill so they pop among neighbors
+          lyr.setStyle({
+            ...base,
+            color: '#ff2d95',
+            weight: 4,
+            opacity: 1,
+            fillColor: '#fb7185',
+            fillOpacity: 0.82,
+          });
+          if (lyr.bringToFront) lyr.bringToFront();
+        } else {
+          // Dim non-matches a bit when a search is active
+          if (hitSet.size) {
+            lyr.setStyle({
+              ...base,
+              fillOpacity: Math.min(base.fillOpacity || 0.65, 0.28),
+              opacity: 0.45,
+              weight: 1,
+            });
+          } else {
+            lyr.setStyle(base);
+          }
+        }
+      });
+      // Keep selection on top of search hits
+      if (selectedLayer && selectedLayer.bringToFront) selectedLayer.bringToFront();
+      updateStats();
+    }
+
+
+    function shortAddr(a) {
+      return (a || '').replace(/ HOLLOWIND CT.*/i, ' Hollowind')
+        .replace(/ EVENING BREEZE CT.*/i, ' Eve. Breeze')
+        .replace(/ STILLBROOK FARM DR.*/i, ' Stillbrook') || 'Selected';
+    }
+    function updateLegendSelected(props) {
+      const wrap = document.getElementById('legendSelected');
+      const addr = document.getElementById('legendSelectedAddr');
+      if (!wrap || !addr) return;
+      if (!props) {
+        addr.textContent = 'Selected';
+        wrap.classList.add('is-empty');
+        return;
+      }
+      addr.textContent = shortAddr(props.address) || ('Lot ' + (props.lot || '?'));
+      wrap.classList.remove('is-empty');
+    }
+
+    function showDetail(p, lyr) {
+      selectedLayer = lyr;
+      refreshStyles();
+      updateLegendSelected(p);
+      const o = ownerAsOf(p, currentYear);
+      const pills = [];
+      if (p.highlight === 'early-landino') pills.push('<span class="pill early">Early sale · Landino · 1999-09-03</span>');
+      if (p.highlight === 'early-gordon') pills.push('<span class="pill early">Early sale · Gordon · 1999-09-03</span>');
+      if (o.era === 'original') pills.push('<span class="pill">Originaler as of ' + currentYear + '</span>');
+      if (o.era === 'second') pills.push('<span class="pill">2nd owner as of ' + currentYear + '</span>');
+      if (o.era === 'later') pills.push('<span class="pill">Owner #' + o.ownerNum + ' as of ' + currentYear + '</span>');
+      if (o.era === 'unsold') pills.push('<span class="pill">Not yet sold as of ' + currentYear + '</span>');
+
+      let salesHtml = '<ul class="sales">';
+      if (!p.sales || !p.sales.length) {
+        salesHtml += '<li class="hint">No sales history in local dataset.</li>';
+      } else {
+        // newest first for reading
+        [...p.sales].reverse().forEach((s, i, arr) => {
+          const active = o.sale && o.sale.date === s.date && o.status === 'owned';
+          salesHtml += `<li style="${active ? 'background:rgba(91,159,212,0.12);margin:0 -0.4rem;padding:0.45rem 0.4rem;border-radius:6px;' : ''}">
+            <div class="when">${s.date}${active ? (' · owner in ' + currentYear) : ''}</div>
+            <div class="buyer">${esc(s.buyer || '—')}</div>
+            ${pricesUnlocked() ? ('<div class="price">' + formatPrice(s.price) + '</div>') : ''}
+          </li>`;
+        });
+      }
+      salesHtml += '</ul>';
+
+      document.getElementById('detail').innerHTML = `
+        <h2>${esc(p.address || ('Lot ' + (p.lot || '?')))}</h2>
+        <div class="meta">PIN ${esc(p.pin || '—')} · Lot ${esc(String(p.lot || '—'))}${p.year_built ? ' · Built ' + esc(p.year_built) : ''}</div>
+        ${pills.join('')}
+        <div class="meta" style="margin-top:0.4rem">${o.owner ? ('Owner as of ' + currentYear + ': <strong style="color:#e7ecf3">' + esc(o.owner) + '</strong>') : (o.status === 'unsold' ? 'No recorded sale yet by end of ' + currentYear : 'No sales data')}</div>
+        <div style="margin-top:0.55rem;font-size:0.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em">Sale history</div>
+        ${salesHtml}
+      `;
+    }
+
+    function formatPrice(p) {
+      if (p == null || p === '' || p === '$0' || p === '$0.00') return 'Price not recorded (often a trust / $0 transfer)';
+      return esc(p);
+    }
+
+    function esc(s) {
+      return String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function parsePrice(p) {
+      if (p == null || p === '' || p === '$0' || p === '$0.00') return null;
+      const n = Number(String(p).replace(/[^0-9.]/g, ''));
+      return Number.isFinite(n) && n > 0 ? n : null;
+    }
+
+    function fmtMoney(n) {
+      return '$' + Math.round(n).toLocaleString('en-US');
+    }
+
+    function updateStats() {
+      let unsold = 0, original = 0, second = 0, third = 0, fourth = 0, fifthPlus = 0, nodata = 0;
+      let txCumulative = 0, txThisYear = 0, txAllTime = 0;
+      let yearPriceSum = 0, yearPriceN = 0;
+      const yearPrices = [];
+      const cutoff = `${currentYear}-12-31`;
+      const yearStart = `${currentYear}-01-01`;
+      PARCEL_DATA.features.forEach((f) => {
+        const o = ownerAsOf(f.properties, currentYear);
+        if (o.status === 'no-data') nodata++;
+        else if (o.era === 'unsold') unsold++;
+        else if (o.ownerNum === 1) original++;
+        else if (o.ownerNum === 2) second++;
+        else if (o.ownerNum === 3) third++;
+        else if (o.ownerNum === 4) fourth++;
+        else if (o.ownerNum >= 5) fifthPlus++;
+        (f.properties.sales || []).forEach((s) => {
+          if (!s.date) return;
+          txAllTime++;
+          if (s.date <= cutoff) txCumulative++;
+          if (s.date >= yearStart && s.date <= cutoff) {
+            txThisYear++;
+            const dollars = parsePrice(s.price);
+            if (dollars != null) {
+              yearPriceSum += dollars;
+              yearPriceN++;
+              yearPrices.push(dollars);
+            }
+          }
+        });
+      });
+      yearPrices.sort((a, b) => a - b);
+      let median = null;
+      if (yearPriceN) {
+        const mid = Math.floor(yearPriceN / 2);
+        median = (yearPriceN % 2) ? yearPrices[mid] : (yearPrices[mid - 1] + yearPrices[mid]) / 2;
+      }
+      const medianTxt = median != null ? fmtMoney(median) : '—';
+      let ownerLine = `<strong>${currentYear}</strong> ownership: `
+        + `<strong>${original}</strong> originalers · <strong>${second}</strong> 2nd · <strong>${third}</strong> 3rd · <strong>${fourth}</strong> 4th`;
+      if (fifthPlus) ownerLine += ` · <strong>${fifthPlus}</strong> 5th+`;
+      ownerLine += ` · ${unsold} unsold · ${nodata} no data`
+        + ` <span style="opacity:0.85">(of ${PARCEL_DATA.features.length})</span>`;
+      let salesLine = `<strong>${txThisYear}</strong> sales in ${currentYear}`
+        + ` · median <strong>${medianTxt}</strong>`
+        + (yearPriceN ? ` (n=${yearPriceN})` : '')
+        + ` · ${txCumulative} cumulative · ${txAllTime} all-time`;
+      const el = document.getElementById('stats');
+      if (el) el.innerHTML = ownerLine + '<br>' + salesLine;
+      const ys = document.getElementById('yearSummary');
+      if (ys) ys.innerHTML = ownerLine + ' · ' + salesLine;
+    }
+
+    const yearRange = document.getElementById('yearRange');
+    const yearSelect = document.getElementById('yearSelect');
+    const YEAR_MIN = 1999;
+    const YEAR_MAX = 2026;
+    yearRange.min = String(YEAR_MIN);
+    yearRange.max = String(YEAR_MAX);
+    yearRange.value = String(YEAR_MIN);
+    currentYear = YEAR_MIN;
+
+    (function buildYearSelect() {
+      let opts = '';
+      for (let y = YEAR_MIN; y <= YEAR_MAX; y++) {
+        opts += `<option value="${y}">${y}</option>`;
+      }
+      yearSelect.innerHTML = opts;
+      yearSelect.value = String(YEAR_MIN);
+    })();
+
+    function setYear(y, from) {
+      currentYear = +y;
+      if (from !== 'range') yearRange.value = String(currentYear);
+      if (from !== 'select') yearSelect.value = String(currentYear);
+      syncSatelliteToYear(currentYear);
+      refreshStyles();
+      if (selectedLayer) showDetail(selectedLayer.feature.properties, selectedLayer);
+    }
+
+
+    function surnameFromBuyer(buyer) {
+      if (!buyer) return '—';
+      // Loudoun style: "LAST, FIRST ..." or multi "A, B & C, D" — use first surname
+      const primary = String(buyer).split('&')[0].trim();
+      const beforeComma = primary.split(',')[0].trim();
+      if (!beforeComma) return '—';
+      // Drop trailing trust/role crumbs if any
+      return beforeComma.replace(/\s+TR$/i, '').trim() || '—';
+    }
+
+    function latestPricedSale() {
+      let best = null;
+      PARCEL_DATA.features.forEach((f) => {
+        const sales = (f.properties.sales || []).slice().sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+        sales.forEach((s, idx) => {
+          if (!s.date) return;
+          const dollars = parsePrice(s.price);
+          if (dollars == null) return; // skip $0 / unpriced for the headline
+          const sellerBuyer = idx > 0 ? (sales[idx - 1].buyer || '') : '';
+          const row = {
+            date: s.date,
+            price: s.price || '',
+            dollars,
+            buyer: s.buyer || '',
+            buyerLast: surnameFromBuyer(s.buyer),
+            sellerLast: idx > 0 ? surnameFromBuyer(sellerBuyer) : '—',
+            address: f.properties.address || '',
+            pin: f.properties.pin || '',
+          };
+          if (!best || row.date > best.date || (row.date === best.date && row.dollars > best.dollars)) {
+            best = row;
+          }
+        });
+      });
+      return best;
+    }
+
+    function findLayerByPin(pin) {
+      let found = null;
+      layer.eachLayer((lyr) => {
+        if (found) return;
+        if (lyr.feature && lyr.feature.properties && lyr.feature.properties.pin === pin) found = lyr;
+      });
+      return found;
+    }
+
+    function selectPin(pin) {
+      const lyr = findLayerByPin(pin);
+      if (!lyr) return;
+      showDetail(lyr.feature.properties, lyr);
+      try {
+        const b = lyr.getBounds();
+        if (b && b.isValid()) map.fitBounds(b.pad(0.6), { maxZoom: 18 });
+      } catch (e) {}
+    }
+
+    function renderSalesFeed() {
+      const latestEl = document.getElementById('latestSale');
+      if (!latestEl) return;
+      if (!pricesUnlocked()) {
+        latestEl.textContent = 'Latest sale: —';
+        return;
+      }
+      const latest = latestPricedSale();
+      if (!latest) {
+        latestEl.textContent = 'Latest sale: —';
+        return;
+      }
+      const amt = fmtMoney(latest.dollars);
+      latestEl.innerHTML = `Latest sale: <strong class="amt">${esc(amt)}</strong> · `
+        + `<span class="addr" title="Select parcel">${esc(latest.address)}</span>`
+        + ` · seller <span class="name">${esc(latest.sellerLast)}</span>`
+        + ` → buyer <span class="name">${esc(latest.buyerLast)}</span>`
+        + ` · <strong>${esc(latest.date)}</strong>`;
+      const a = latestEl.querySelector('.addr');
+      if (a) a.addEventListener('click', () => selectPin(latest.pin));
+    }
+
+    async function refreshPublishedSales() {
+      if (!pricesUnlocked()) return;
+      try {
+        const res = await fetch('sec13_parcels.json?t=' + Date.now(), { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const fresh = await res.json();
+        if (!fresh || !fresh.features) throw new Error('bad json');
+        PARCEL_DATA.features = fresh.features;
+        layer.eachLayer((lyr) => {
+          const pin = lyr.feature && lyr.feature.properties && lyr.feature.properties.pin;
+          const nf = fresh.features.find((f) => f.properties && f.properties.pin === pin);
+          if (nf) lyr.feature.properties = nf.properties;
+        });
+        refreshStyles();
+        updateStats();
+        if (selectedLayer) showDetail(selectedLayer.feature.properties, selectedLayer);
+        renderSalesFeed();
+      } catch (err) {
+        console.warn(err);
+      }
+    }
+
+    (function initSalesFeed() {
+      if (pricesUnlocked()) renderSalesFeed();
+      // Quietly reload published sales so the latest-sale line updates after new data is published
+      setInterval(() => { refreshPublishedSales(); }, 5 * 60 * 1000);
+    })();
+
+    (function buildYearTicks() {
+      const el = document.getElementById('yearTicks');
+      if (!el) return;
+      const span = YEAR_MAX - YEAR_MIN;
+      let html = '';
+      for (let y = YEAR_MIN; y <= YEAR_MAX; y++) {
+        // Label 1999, then 2005/2010/.../2025, and 2026 — skip 2000 so start isn't cramped
+        const major = (y === YEAR_MIN || y === YEAR_MAX || (y >= 2005 && y % 5 === 0));
+        const pct = ((y - YEAR_MIN) / span) * 100;
+        let cls = 'tick' + (major ? ' major' : '');
+        if (y === YEAR_MIN) cls += ' start';
+        if (y === YEAR_MAX) cls += ' end';
+        const label = major ? String(y) : '';
+        html += `<span class="${cls}" style="left:${pct}%" title="${y}">${label}</span>`;
+      }
+      el.innerHTML = html;
+    })();
+
+    yearRange.addEventListener('input', () => setYear(yearRange.value, 'range'));
+    yearSelect.addEventListener('change', () => setYear(yearSelect.value, 'select'));
+    updateSatDateBadge(YEAR_MIN);
+
+    function syncBearingLabel() {
+      const deg = ((map.getBearing() % 360) + 360) % 360;
+      document.getElementById('rotateResetBtn').title = `Reset north-up (now ${Math.round(deg)}°)`;
+    }
+    document.getElementById('rotateLeftBtn').addEventListener('click', () => {
+      map.setBearing(map.getBearing() - 45);
+      syncBearingLabel();
+    });
+    document.getElementById('rotateRightBtn').addEventListener('click', () => {
+      map.setBearing(map.getBearing() + 45);
+      syncBearingLabel();
+    });
+    document.getElementById('rotateResetBtn').addEventListener('click', () => {
+      map.setBearing(0);
+      syncBearingLabel();
+    });
+
+    document.getElementById('playBtn').addEventListener('click', () => {
+      const btn = document.getElementById('playBtn');
+      if (playTimer) {
+        clearInterval(playTimer);
+        playTimer = null;
+        btn.textContent = '▶';
+        return;
+      }
+      btn.textContent = '❚❚';
+      if (currentYear >= YEAR_MAX) {
+        setYear(YEAR_MIN, 'play');
+      }
+      playTimer = setInterval(() => {
+        if (currentYear >= YEAR_MAX) {
+          clearInterval(playTimer);
+          playTimer = null;
+          btn.textContent = '▶';
+          return;
+        }
+        setYear(currentYear + 1, 'play');
+      }, 650);
+    });
+
+    const srcBtn = document.getElementById('srcBtn');
+    const srcModal = document.getElementById('srcModal');
+    srcBtn.addEventListener('click', () => {
+      srcModal.classList.toggle('open');
+    });
+    document.getElementById('srcClose').addEventListener('click', () => {
+      srcModal.classList.remove('open');
+    });
+    map.on('click', () => srcModal.classList.remove('open'));
+
+    updateStats();
+    // Start neutral — no parcel pre-selected
+  </script>
+</body>
+</html>
