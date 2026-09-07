@@ -331,7 +331,7 @@
         </ul>
         <h4>Notes</h4>
         <ul>
-          <li>Ownership eras are inferred from recorded sale/deed rows we pulled; <code>$0</code> / trust transfers still count as owner-era changes.</li>
+          <li>Ownership eras count the first deed plus later priced sales; <code>$0</code> / trust / title tweaks do not start a new owner era (same family stays an originaler).</li>
           <li>Scrubber is year-level (end of year), not day-level.</li>
           <li>A few GIS parcels may lack matching sales rows in the local extract.</li>
         </ul>
@@ -556,6 +556,13 @@
     ).addTo(map);
     map.on('baselayerchange', () => updateSatDateBadge(typeof currentYear === 'number' ? currentYear : 1999));
 
+    function countsAsNewOwner(sale, isFirst) {
+      // First recorded deed starts ownership. Later $0 / unpriced rows are usually
+      // trusts / title tweaks (Thompson, Crisp, etc.) — not a new owner era.
+      if (isFirst) return true;
+      return parsePrice(sale && sale.price) != null;
+    }
+
     function ownerAsOf(props, yearEnd) {
       // yearEnd = YYYY as of Dec 31 of that year
       const cutoff = `${yearEnd}-12-31`;
@@ -568,7 +575,11 @@
       }
       if (idx < 0) return { status: 'unsold', owner: null, saleIndex: -1, era: 'unsold' };
       const sale = sales[idx];
-      const ownerNum = idx + 1; // 1 = original buyer at first sale
+      let ownerNum = 0;
+      for (let i = 0; i <= idx; i++) {
+        if (countsAsNewOwner(sales[i], i === 0)) ownerNum++;
+      }
+      if (ownerNum < 1) ownerNum = 1;
       return {
         status: 'owned',
         owner: sale.buyer,
