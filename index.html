@@ -321,8 +321,8 @@
         </ul>
         <h4>Sales &amp; ownership history</h4>
         <ul>
-          <li>Loudoun County real estate / tax assessment sales history (public parcel records)</li>
-          <li>County assessment &amp; land records portals (Loudoun Online Tax System / LandMARC where used for deed context)</li>
+          <li>Loudoun County Real Property Information — Sales / Transfers per PIN (<a href="https://reparcelasmt.loudoun.gov/pt/search/CommonSearch.aspx?mode=PARID" target="_blank" rel="noopener">reparcelasmt.loudoun.gov</a>)</li>
+          <li>Lot-by-lot audit: <a href="docs/loudoun-sales-audit.md">docs/loudoun-sales-audit.md</a> (what matched county, what RPI omitted)</li>
         </ul>
         <h4>Basemap</h4>
         <ul>
@@ -332,8 +332,10 @@
         <h4>Notes</h4>
         <ul>
           <li>Ownership eras count the first deed plus later priced sales; <code>$0</code> / trust / title tweaks do not start a new owner era (same family stays an originaler).</li>
+          <li>A later priced row on the <em>same day</em> as the previous era, same household (e.g. Moran restatement) is kept on the card but does not start a new era. A same-day relocation (Hewitt → Goodwyn) still does.</li>
+          <li>Some lots have no 1999–2000 priced first sale in Loudoun RPI — those originals are not invented. The first recorded RPI deed starts the era.</li>
           <li>Scrubber is year-level (end of year), not day-level.</li>
-          <li>A few GIS parcels may lack matching sales rows in the local extract.</li>
+          <li>Open-space parcels A–E stay no-data (not houses).</li>
         </ul>
       </div>
       <aside class="panel" id="detail">
@@ -384,7 +386,10 @@
   <script>
 
     const PW_HASH = "6f0bbe98f934f832f1367b24c3df2d58cd067a2836840c5eb02ba05f9c837d97"; // Broadlands13 — map + median only
-    const PRICE_PW_HASH = "fb8dc6a9aa83d07d38f94d99b0b0b4c686ba54d10009a43d648191821cab0ce7"; // Broadlands13$$ — map + all sale amounts
+    const PRICE_PW_HASHES = [
+      "fb8dc6a9aa83d07d38f94d99b0b0b4c686ba54d10009a43d648191821cab0ce7", // Broadlands13$$
+      "8668e1f233f5d5121974019a5603a8a18c43bd82e7132e050f6b18367f51c545", // Hollowind$$
+    ];
     const PW_KEY = "sec13_unlocked_v1";
     const PRICE_KEY = "sec13_prices_unlocked_v1";
 
@@ -414,7 +419,7 @@
       const h = await sha256Hex(pw);
       let ok = false;
       let withPrices = false;
-      if (h === PRICE_PW_HASH) {
+      if (PRICE_PW_HASHES.includes(h)) {
         ok = true;
         withPrices = true;
       } else if (h === PW_HASH) {
@@ -556,11 +561,39 @@
     ).addTo(map);
     map.on('baselayerchange', () => updateSatDateBadge(typeof currentYear === 'number' ? currentYear : 1999));
 
-    function countsAsNewOwner(sale, isFirst) {
+    function buyerSurnames(buyer) {
+      const names = new Set();
+      String(buyer || '').split('&').forEach((part) => {
+        let last = part.trim().split(',')[0].trim().toUpperCase();
+        last = last.replace(/\s+TR$/i, '').replace(/\s+TEE[S]?$/i, '');
+        if (last) names.add(last);
+      });
+      return names;
+    }
+
+    function sameHousehold(a, b) {
+      const A = buyerSurnames(a);
+      const B = buyerSurnames(b);
+      for (const n of A) if (B.has(n)) return true;
+      return false;
+    }
+
+    function countsAsNewOwner(sale, isFirst, prevEraSale) {
       // First recorded deed starts ownership. Later $0 / unpriced rows are usually
       // trusts / title tweaks (Thompson, Crisp, etc.) — not a new owner era.
       if (isFirst) return true;
-      return parsePrice(sale && sale.price) != null;
+      if (parsePrice(sale && sale.price) == null) return false;
+      // Same-day same-household restatement (Moran R/S) stays on the card
+      // but must not create a fake turnover. Hewitt → Goodwyn still counts.
+      if (
+        prevEraSale
+        && sale.date === prevEraSale.date
+        && parsePrice(sale.price) === parsePrice(prevEraSale.price)
+        && sameHousehold(sale.buyer, prevEraSale.buyer)
+      ) {
+        return false;
+      }
+      return true;
     }
 
     function ownerAsOf(props, yearEnd) {
@@ -576,8 +609,12 @@
       if (idx < 0) return { status: 'unsold', owner: null, saleIndex: -1, era: 'unsold' };
       const sale = sales[idx];
       let ownerNum = 0;
+      let prevEra = null;
       for (let i = 0; i <= idx; i++) {
-        if (countsAsNewOwner(sales[i], i === 0)) ownerNum++;
+        if (countsAsNewOwner(sales[i], ownerNum === 0, prevEra)) {
+          ownerNum++;
+          prevEra = sales[i];
+        }
       }
       if (ownerNum < 1) ownerNum = 1;
       return {
@@ -815,12 +852,18 @@
         salesHtml += '<li class="hint">No sales history in local dataset.</li>';
       } else {
         // newest first for reading
-        [...p.sales].reverse().forEach((s, i, arr) => {
-          const active = o.sale && o.sale.date === s.date && o.status === 'owned';
+        [...p.sales].reverse().forEach((s) => {
+          const active = o.sale && o.sale.date === s.date && o.sale.buyer === s.buyer && o.status === 'owned';
+          const bits = [];
+          if (s.seller) bits.push('from ' + s.seller);
+          if (s.instrument) bits.push('instr. ' + s.instrument);
+          if (s.note) bits.push(s.note);
+          const extra = bits.length ? `<div class="meta" style="margin-top:0.2rem">${esc(bits.join(' · '))}</div>` : '';
           salesHtml += `<li style="${active ? 'background:rgba(91,159,212,0.12);margin:0 -0.4rem;padding:0.45rem 0.4rem;border-radius:6px;' : ''}">
             <div class="when">${s.date}${active ? (' · owner in ' + currentYear) : ''}</div>
             <div class="buyer">${esc(s.buyer || '—')}</div>
             ${pricesUnlocked() ? ('<div class="price">' + formatPrice(s.price) + '</div>') : ''}
+            ${extra}
           </li>`;
         });
       }
@@ -855,14 +898,21 @@
       return '$' + Math.round(n).toLocaleString('en-US');
     }
 
+    function isHouseLot(props) {
+      return /^\d+$/.test(String((props && props.lot) || ''));
+    }
+
     function updateStats() {
       let unsold = 0, original = 0, second = 0, third = 0, fourth = 0, fifthPlus = 0, nodata = 0;
-      let txCumulative = 0, txThisYear = 0, txAllTime = 0;
+      let txCumulative = 0, txThisYear = 0, txAllTime = 0, pricedAllTime = 0;
       let yearPriceSum = 0, yearPriceN = 0;
+      let houseN = 0;
       const yearPrices = [];
       const cutoff = `${currentYear}-12-31`;
       const yearStart = `${currentYear}-01-01`;
       PARCEL_DATA.features.forEach((f) => {
+        if (!isHouseLot(f.properties)) return;
+        houseN++;
         const o = ownerAsOf(f.properties, currentYear);
         if (o.status === 'no-data') nodata++;
         else if (o.era === 'unsold') unsold++;
@@ -874,6 +924,7 @@
         (f.properties.sales || []).forEach((s) => {
           if (!s.date) return;
           txAllTime++;
+          if (parsePrice(s.price) != null) pricedAllTime++;
           if (s.date <= cutoff) txCumulative++;
           if (s.date >= yearStart && s.date <= cutoff) {
             txThisYear++;
@@ -897,11 +948,11 @@
         + `<strong>${original}</strong> originalers · <strong>${second}</strong> 2nd · <strong>${third}</strong> 3rd · <strong>${fourth}</strong> 4th`;
       if (fifthPlus) ownerLine += ` · <strong>${fifthPlus}</strong> 5th+`;
       ownerLine += ` · ${unsold} unsold · ${nodata} no data`
-        + ` <span style="opacity:0.85">(of ${PARCEL_DATA.features.length})</span>`;
+        + ` <span style="opacity:0.85">(of ${houseN} houses)</span>`;
       let salesLine = `<strong>${txThisYear}</strong> sales in ${currentYear}`
         + ` · median <strong>${medianTxt}</strong>`
         + (yearPriceN ? ` (n=${yearPriceN})` : '')
-        + ` · ${txCumulative} cumulative · ${txAllTime} all-time`;
+        + ` · ${txCumulative} cumulative · ${pricedAllTime} priced / ${txAllTime} recorded`;
       const el = document.getElementById('stats');
       if (el) el.innerHTML = ownerLine + '<br>' + salesLine;
       const ys = document.getElementById('yearSummary');
