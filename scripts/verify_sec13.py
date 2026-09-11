@@ -99,13 +99,29 @@ def main() -> None:
     # No invented 1999 sale on lot 16
     assert lots["16"]["sales"][0]["date"] == "2007-08-30"
 
+    # Clerk overlay: no invented originals; lookup covers the 23-lot gap
+    clerk_deeds = json.loads((ROOT / "data" / "loudoun-clerk-deeds.json").read_text())
+    assert clerk_deeds.get("deeds") == []
+    clerk_lookup = json.loads((ROOT / "data" / "loudoun-clerk-lookup.json").read_text())
+    assert clerk_lookup.get("verified_original_deeds_added_to_map") == 0
+    gap_lots = {str(x) for x in [4, 6, 7, 8, 11, 13, 16, 18, 19, 20, 22, 23, 24, 25, 28, 30, 32, 36, 42, 46, 50, 51, 54]}
+    assert {str(x["lot"]) for x in clerk_lookup["lots"]} == gap_lots
+    # Three legal-line book/pages sit in the known-original book range — pointers only
+    ptr = {
+        (str(L["lot"]), f"{bp['book']}--{bp['page']}")
+        for L in clerk_lookup["lots"]
+        for bp in L.get("book_page_refs") or []
+        if bp.get("classification") == "same_book_range_as_known_1999_2000_originals"
+    }
+    assert ptr == {("18", "1746--2101"), ("19", "1771--919"), ("46", "1769--79")}
+
     # Snapshot exists and covers every PIN
     snap = json.loads((ROOT / "data" / "loudoun-rpi-sales.json").read_text())
     pins = {f["properties"]["pin"] for f in data["features"]}
     assert {p["pin"] for p in snap["parcels"]} == pins
     assert not snap.get("errors")
 
-    print("ok: passwords, 55 lots, 21 originalers, 34 turnovers, 90 priced, median $622,000")
+    print("ok: passwords, 55 lots, 21 originalers, 34 turnovers, 90 priced, median $622,000, clerk overlay empty")
 
 
 if __name__ == "__main__":

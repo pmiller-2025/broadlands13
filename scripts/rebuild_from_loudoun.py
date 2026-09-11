@@ -15,6 +15,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 EXTRACT = ROOT / "data" / "loudoun-rpi-sales.json"
+CLERK_DEEDS = ROOT / "data" / "loudoun-clerk-deeds.json"
+CLERK_LOOKUP = ROOT / "data" / "loudoun-clerk-lookup.json"
 PARCELS = ROOT / "sec13_parcels.json"
 DATA_JS = ROOT / "data.js"
 AUDIT = ROOT / "docs" / "loudoun-sales-audit.md"
@@ -90,6 +92,72 @@ def eras(sales: list[dict]) -> int:
     return n
 
 
+def load_clerk_deeds() -> dict[str, list[dict]]:
+    """PIN → clerk-verified original rows. Requires date + buyer. Never invent."""
+    if not CLERK_DEEDS.exists():
+        return {}
+    data = json.loads(CLERK_DEEDS.read_text())
+    by_pin: dict[str, list[dict]] = {}
+    for raw in data.get("deeds") or []:
+        date_s = parse_mdy(raw.get("date"))
+        buyer = (raw.get("buyer") or "").strip()
+        pin = (raw.get("pin") or "").strip()
+        if not date_s or not buyer or not pin:
+            continue
+        price = raw.get("price")
+        if price in (None, ""):
+            price_s = "$0"
+        else:
+            price_s = fmt_price(price)
+        row = {
+            "date": date_s,
+            "price": price_s,
+            "buyer": buyer,
+            "seller": (raw.get("seller") or "").strip(),
+            "instrument": (raw.get("instrument") or "").strip(),
+            "valuation": (raw.get("valuation") or "").strip(),
+            "note": (raw.get("note") or "Clerk PAX index — original deed").strip(),
+        }
+        book, page = (raw.get("book") or "").strip(), (raw.get("page") or "").strip()
+        if book and page and "book" not in row["note"].lower():
+            row["note"] = f"{row['note']}; book {book} page {page}"
+        by_pin.setdefault(pin, []).append(row)
+    return by_pin
+
+
+def sale_key(s: dict) -> tuple:
+    return (
+        s.get("date"),
+        parse_price(s.get("price")),
+        (s.get("buyer") or "").upper(),
+        (s.get("instrument") or ""),
+    )
+
+
+def merge_clerk_originals(rpi_sales: list[dict], clerk_rows: list[dict]) -> list[dict]:
+    """Prepend clerk-verified originals that RPI does not already list."""
+    have = {sale_key(s) for s in rpi_sales}
+    extra = []
+    for s in clerk_rows:
+        k = sale_key(s)
+        # Also skip if same date+buyer already present (instrument may be blank on one side).
+        already = k in have or any(
+            s.get("date") == e.get("date") and (s.get("buyer") or "").upper() == (e.get("buyer") or "").upper()
+            for e in rpi_sales
+        )
+        if already:
+            continue
+        extra.append(s)
+    merged = extra + rpi_sales
+
+    def sort_key(r):
+        inst = r.get("instrument") or ""
+        return (r["date"] or "9999", inst, r["buyer"])
+
+    merged.sort(key=sort_key)
+    return merged
+
+
 def load_existing() -> dict:
     if PARCELS.exists():
         return json.loads(PARCELS.read_text())
@@ -144,6 +212,8 @@ def main() -> None:
     existing = load_existing()
     extract = json.loads(EXTRACT.read_text())
     by_pin = {r["pin"]: r for r in extract["parcels"]}
+    clerk_by_pin = load_clerk_deeds()
+    clerk_lookup = json.loads(CLERK_LOOKUP.read_text()) if CLERK_LOOKUP.exists() else {}
 
     old_by_pin = {f["properties"]["pin"]: f["properties"] for f in existing["features"]}
     rebuilt = []
@@ -158,7 +228,8 @@ def main() -> None:
         if letter:
             new_sales = []  # keep HOA as no-data / open space
         else:
-            new_sales = [sale_public(s) for s in county_sales_oldest_first(rec)]
+            rpi_sales = [sale_public(s) for s in county_sales_oldest_first(rec)]
+            new_sales = merge_clerk_originals(rpi_sales, clerk_by_pin.get(pin) or [])
         props["sales"] = new_sales
         rebuilt.append({"type": "Feature", "geometry": feat["geometry"], "properties": props})
 
@@ -210,11 +281,11 @@ def main() -> None:
     fc = {"type": "FeatureCollection", "features": rebuilt}
     PARCELS.write_text(json.dumps(fc, separators=(",", ":")))
     DATA_JS.write_text("const PARCEL_DATA = " + json.dumps(fc, separators=(",", ":")) + ";\n")
-    write_audit(extract, audit_rows)
+    write_audit(extract, audit_rows, clerk_lookup)
     print(f"wrote {PARCELS} {DATA_JS} {AUDIT}")
 
 
-def write_audit(extract: dict, rows: list[dict]) -> None:
+def write_audit(extract: dict, rows: list[dict], clerk_lookup: dict | None = None) -> None:
     houses = [r for r in rows if not r["letter"]]
     hoa = [r for r in rows if r["letter"]]
     priced_all = []
@@ -264,7 +335,7 @@ def write_audit(extract: dict, rows: list[dict]) -> None:
     a("1. **Lot inventory** — Loudoun GIS `COL/LandRecordData` parcels where `PA_SUBD_NAME` contains BROADLANDS and `PA_SUBD_SECT='13'`. Every parcel is plat **1998-0187**. Result: **55 numbered house lots + 5 open-space parcels (A–E)**. The map already had exactly those 60 PINs; none missing, none extra.")
     a("2. **Sales history** — for each PIN, the official RPI datalet `mode=sales` at `reparcelasmt.loudoun.gov` (date, price, buyer) plus each sale’s detail card (seller, instrument, valuation, notes). Pulled live; nothing invented.")
     a("3. **PIN remap** — every Section 13 PIN shows a 2005 parcel-tracking split from parent PIN `156488930000`. That parent is the old developer tract (1994 Broadlands Associates sale), not a per-lot owner history. It does **not** restore missing 1999–2000 house deeds.")
-    a("4. **Clerk land records (PAX)** — the free index at `lisweb.loudoun.gov/paxworld` requires an account. This audit did not create one, so original builder deeds that RPI omitted were **not** filled in from memory or Zillow.")
+    a("4. **Clerk land records (PAX / LandMARC / GIS)** — every public path was tried before treating a lot as still unavailable. LandMARC is permits, not deeds. GIS has no grantor/grantee. Historic indexes stop in 1903. Sales-report downloads start in 2013. The Clerk PAX index at `lisweb.loudoun.gov/paxworld` is the official next step; it requires a free occasional-user account. This audit did **not** create one and did **not** invent originals from Zillow, book numbers, or building permits.")
     a("")
     a("## New totals (55 houses)")
     a("")
@@ -315,7 +386,7 @@ def write_audit(extract: dict, rows: list[dict]) -> None:
     a("")
     a("## Lots whose 1999–2000 original priced sale is **not** in Loudoun RPI")
     a("")
-    a("A neighbor was right that several original buyers are missing from the **assessment** sales history. RPI simply does not list a 1999–2000 priced first sale on these PINs. This audit **does not invent** those deeds. The first *recorded* RPI deed is what the map uses (first deed starts the era). Clerk PAX / deed images would be the next official place to look.")
+    a("A neighbor was right that several original buyers are missing from the **assessment** sales history. RPI simply does not list a 1999–2000 priced first sale on these PINs. This audit **does not invent** those deeds. The first *recorded* RPI deed is what the map uses unless a later clerk-verified original is merged from `data/loudoun-clerk-deeds.json` (that file is empty until PAX returns grantor, grantee, and date).")
     a("")
     a("| Lot | Address | PIN | First RPI deed | Still originaler? | Gap |")
     a("| --- | --- | --- | --- | --- | --- |")
@@ -323,6 +394,7 @@ def write_audit(extract: dict, rows: list[dict]) -> None:
         first = f"{r['original_date']} {r['original_price']} {r['original_buyer']}"
         a(f"| {r['lot']} | {r['address']} | {r['pin']} | {first} | {'Y' if r['still_originaler'] else 'N'} | {r['gap_why']} |")
     a("")
+    write_clerk_section(a, clerk_lookup or {}, gaps)
     a("## Lot-by-lot reconciliation (55 houses)")
     a("")
     a("Columns: original buyer = first RPI deed (priced or $0). Still originaler = only one owner era after skipping later $0 / same-household same-day restatements. County vs map = whether the published card already matched RPI before this audit.")
@@ -386,11 +458,73 @@ def write_audit(extract: dict, rows: list[dict]) -> None:
     a("- Loudoun County Real Property Information — Sales / Transfers per PIN, e.g. `https://reparcelasmt.loudoun.gov/PT/datalets/datalet.aspx?UseSearch=no&jur=107&mode=sales&pin=<PIN>&taxyr=2026`")
     a("- Loudoun GIS Land Records parcels — Broadlands Section 13, plat 1998-0187 (`https://logis.loudoun.gov/gis/rest/services/COL/LandRecordData/MapServer/4`)")
     a("- Snapshot of the RPI pull used for this audit: `data/loudoun-rpi-sales.json`")
+    a("- Clerk public-path lookup (pointers only): `data/loudoun-clerk-lookup.json`")
+    a("- Clerk-verified originals overlay (empty until PAX): `data/loudoun-clerk-deeds.json`")
     a("- Refresh: `python3 scripts/fetch_loudoun_sales.py && python3 scripts/rebuild_from_loudoun.py`")
     a("")
-    a("Clerk of Circuit Court deed images were not used (PAX login required). Any original 1999–2000 builder deed that is absent from RPI is documented as a gap, not guessed.")
+    a("Clerk of Circuit Court **images** were not purchased. The free PAX **index** was not searched because it requires a personal occasional-user account. Any original 1999–2000 builder deed that is absent from RPI is documented as a gap, not guessed.")
     a("")
     AUDIT.write_text("\n".join(lines))
+
+
+def write_clerk_section(a, clerk_lookup: dict, gaps: list[dict]) -> None:
+    a("## Clerk / deed-index lookup (2026-09-11)")
+    a("")
+    a("Goal: find the original builder deed (grantor, grantee, date, price if shown, instrument or book/page) for each of the 23 gap lots, and add only what the clerk index actually shows.")
+    a("")
+    a("**Lots that gained a clerk-verified original on the map: none.** The overlay file `data/loudoun-clerk-deeds.json` has zero rows. Map totals stay at 90 priced sales / 21 originalers / 34 turnovers.")
+    a("")
+    a("### What was reachable without a login")
+    a("")
+    for path in clerk_lookup.get("paths_tried") or []:
+        a(f"- **{path.get('name')}** — {path.get('url')} — {path.get('result')}")
+    if not clerk_lookup.get("paths_tried"):
+        a("- See `data/loudoun-clerk-lookup.json`.")
+    a("")
+    a("### Login Paul must do himself")
+    a("")
+    login = clerk_lookup.get("login_paul_must_do") or {}
+    if login:
+        a(f"- Start: [{login.get('start_here')}]({login.get('start_here')})")
+        a(f"- Create a **free occasional-user account** (your own name) and log in at [{login.get('signup_login')}]({login.get('signup_login')}). Index search is free; images cost $0.50/page plus a convenience fee.")
+        a(f"- Manual: [PAX Occasional User guide (PDF)]({login.get('manual_pdf')})")
+        a(f"- Or use the free in-person kiosks: {login.get('in_person_free')}")
+        a("- After you have grantor / grantee / date (and price only if the index shows it), add a row to `data/loudoun-clerk-deeds.json` and re-run `python3 scripts/rebuild_from_loudoun.py`. Do not add a guessed buyer or a date inferred from a book number.")
+    else:
+        a("- Create a free PAX occasional-user account at https://lisweb.loudoun.gov/paxworld/")
+    a("")
+    a("### Best public pointers (not yet deeds)")
+    a("")
+    a("Lots that already have a 1999–2000 priced first sale in RPI cite deed books **1711–1750** (Landino `1711--539`, Gordon `1711--520`, Thompson `1714--1293`, Paul `1722--977`, Gavva `1741--779`, Crisp `1750--515`). Three gap lots still show a second book/page in that same range on the RPI legal line. That is a **pointer for PAX Book+Page search**, not enough to put a buyer or price on the map.")
+    a("")
+    a("| Lot | Address | Possible original book/page (pointer only) | Later legal cite | First RPI instrument to cross-ref | NEWCON permit (not a deed) |")
+    a("| --- | --- | --- | --- | --- | --- |")
+    lookup_lots = {str(x.get("lot")): x for x in (clerk_lookup.get("lots") or [])}
+    for r in sorted(gaps, key=lambda x: int(x["lot"])):
+        L = lookup_lots.get(str(r["lot"]), {})
+        orig_bp = []
+        later_bp = []
+        for bp in L.get("book_page_refs") or []:
+            cite = f"{bp.get('book')}--{bp.get('page')}"
+            if bp.get("classification") == "same_book_range_as_known_1999_2000_originals":
+                orig_bp.append(cite)
+            else:
+                later_bp.append(cite)
+        later_bp.extend(i.get("instrument") for i in L.get("instrument_refs_on_legal") or [])
+        first = L.get("first_rpi_deed") or {}
+        inst = first.get("instrument") or "—"
+        newcon = L.get("newcon_permit_not_a_deed") or {}
+        newcon_s = f"{newcon.get('date')} {newcon.get('number')}" if newcon.get("date") else "—"
+        a(
+            f"| {r['lot']} | {r['address']} | {', '.join(orig_bp) or '—'} | {', '.join(x for x in later_bp if x) or '—'} | {inst} | {newcon_s} |"
+        )
+    a("")
+    a("Every one of the 23 gap lots has a **1999 or January–March 2000 NEWCON** permit on the public RPI permits tab, so the house was built in the original-sale window. That does **not** name the first buyer and was not added as a sale.")
+    a("")
+    a("### Still county-unavailable (all 23)")
+    a("")
+    a("Until PAX (or a kiosk) returns parties and a recording date, the map keeps using the first RPI deed. Neighbor-facing: these lots do **not** yet show a clerk-proven 1999–2000 originaler.")
+    a("")
 
 
 if __name__ == "__main__":
