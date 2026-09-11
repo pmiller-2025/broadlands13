@@ -9,7 +9,7 @@ This is a neighbor-shareable reconciliation. It is not a title search. Always co
 1. **Lot inventory** — Loudoun GIS `COL/LandRecordData` parcels where `PA_SUBD_NAME` contains BROADLANDS and `PA_SUBD_SECT='13'`. Every parcel is plat **1998-0187**. Result: **55 numbered house lots + 5 open-space parcels (A–E)**. The map already had exactly those 60 PINs; none missing, none extra.
 2. **Sales history** — for each PIN, the official RPI datalet `mode=sales` at `reparcelasmt.loudoun.gov` (date, price, buyer) plus each sale’s detail card (seller, instrument, valuation, notes). Pulled live; nothing invented.
 3. **PIN remap** — every Section 13 PIN shows a 2005 parcel-tracking split from parent PIN `156488930000`. That parent is the old developer tract (1994 Broadlands Associates sale), not a per-lot owner history. It does **not** restore missing 1999–2000 house deeds.
-4. **Clerk land records (PAX)** — the free index at `lisweb.loudoun.gov/paxworld` requires an account. This audit did not create one, so original builder deeds that RPI omitted were **not** filled in from memory or Zillow.
+4. **Clerk land records (PAX / LandMARC / GIS)** — every public path was tried before treating a lot as still unavailable. LandMARC is permits, not deeds. GIS has no grantor/grantee. Historic indexes stop in 1903. Sales-report downloads start in 2013. The Clerk PAX index at `lisweb.loudoun.gov/paxworld` is the official next step; it requires a free occasional-user account. This audit did **not** create one and did **not** invent originals from Zillow, book numbers, or building permits.
 
 ## New totals (55 houses)
 
@@ -25,9 +25,7 @@ The old “~39 turnovers” treated four lots whose **first recorded deed is $0*
 
 ## What changed in the map data
 
-### Added (was missing from the published map)
-
-- Lot 31 21663 STILLBROOK FARM DR: 2016-06-01 · $0 · GAVVA, VINITHA R
+No priced county rows were missing from the map.
 
 No published house rows contradicted county (no extras to delete).
 
@@ -46,7 +44,7 @@ HOA / open space A–E: county records a **1999-01-12 $0** deed to Broadlands As
 
 ## Lots whose 1999–2000 original priced sale is **not** in Loudoun RPI
 
-A neighbor was right that several original buyers are missing from the **assessment** sales history. RPI simply does not list a 1999–2000 priced first sale on these PINs. This audit **does not invent** those deeds. The first *recorded* RPI deed is what the map uses (first deed starts the era). Clerk PAX / deed images would be the next official place to look.
+A neighbor was right that several original buyers are missing from the **assessment** sales history. RPI simply does not list a 1999–2000 priced first sale on these PINs. This audit **does not invent** those deeds. The first *recorded* RPI deed is what the map uses unless a later clerk-verified original is merged from `data/loudoun-clerk-deeds.json` (that file is empty until PAX returns grantor, grantee, and date).
 
 | Lot | Address | PIN | First RPI deed | Still originaler? | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -73,6 +71,69 @@ A neighbor was right that several original buyers are missing from the **assessm
 | 50 | 42758 HOLLOWIND CT | 156488855000 | 2002-02-28 $395,500 ALBERS, EDWARD J & LAURALYN C | N | first recorded sale is a later resale (no 1999–2000 first sale in RPI) |
 | 51 | 42762 HOLLOWIND CT | 156488648000 | 2004-12-06 $603,000 HEWITT RELOCATION SERVICES INC | N | first recorded sale is a later resale (no 1999–2000 first sale in RPI) |
 | 54 | 21651 STILLBROOK FARM DR | 156489840000 | 2002-03-20 $394,900 CLARK, ROBERT W & CAROLYN B | N | first recorded sale is a later resale (no 1999–2000 first sale in RPI) |
+
+## Clerk / deed-index lookup (2026-09-11)
+
+Goal: find the original builder deed (grantor, grantee, date, price if shown, instrument or book/page) for each of the 23 gap lots, and add only what the clerk index actually shows.
+
+**Lots that gained a clerk-verified original on the map: none.** The overlay file `data/loudoun-clerk-deeds.json` has zero rows. Map totals stay at 90 priced sales / 21 originalers / 34 turnovers.
+
+### What was reachable without a login
+
+- **Loudoun RPI Sales / Transfers** — https://reparcelasmt.loudoun.gov/PT/datalets/datalet.aspx — Current tax year (2026) is the only year that returns sales. Older taxyr values return empty. First-sale seller is blank on every gap lot. Instruments on later sales do not reveal the prior grantor/grantee without PAX.
+- **Loudoun RPI profile legal description** — https://reparcelasmt.loudoun.gov/PT/datalets/datalet.aspx — Public. Yields book--page and/or instrument tokens on the legal line. These are pointers, not grantor/grantee/date/price.
+- **Loudoun RPI permits (NEWCON)** — https://reparcelasmt.loudoun.gov/PT/datalets/datalet.aspx?mode=permits — Public. Every gap lot has a 1999 or early-2000 NEWCON permit, so the house existed in the original-sale window. A permit is not a deed and was not added to map sales.
+- **Clerk PAX occasional-user index** — https://lisweb.loudoun.gov/paxworld/ — Login wall. Free index after Create Account. Search/API routes without a session return 404. No account was created (would require inventing a personal identity). Stopped this path.
+- **Clerk PAX subscription download site** — https://lisweb.loudoun.gov/PAXSubscription/ — Same DTS login wall.
+- **Clerk Online Land Records (county page)** — https://www.loudoun.gov/Clerk/OnlineLandRecords — Explains free occasional-user signup and $0.50/page images. Does not expose the index without an account.
+- **LandMARC (Tyler EnerGov)** — https://loudouncountyvaeg.tylerhost.net/prod/selfservice — Permits and land-development applications, not the deed index. GIS LMARC/LandMARC_Permits is the same domain.
+- **Loudoun GIS LandRecords / LandRecordData / LMIS platfile** — https://logis.loudoun.gov/gis/rest/services — No grantor/grantee/consideration. LMISVPC_PAR_CURR owner-start/sale dates are the current owner, not the 1999 builder.
+- **Public Real Estate Sales Reports** — https://www.loudoun.gov/649/Public-Real-Estate-Reports — Downloadable sales reports start 2013. Too late for 1999–2000 builder deeds.
+- **Historic deed indexes** — https://www.loudoun.gov/2184/Deeds — PDF indexes 1757–1903 only. FamilySearch / LVA films likewise stop far before 1999.
+
+### Login Paul must do himself
+
+- Start: [https://www.loudoun.gov/Clerk/OnlineLandRecords](https://www.loudoun.gov/Clerk/OnlineLandRecords)
+- Create a **free occasional-user account** (your own name) and log in at [https://lisweb.loudoun.gov/paxworld/](https://lisweb.loudoun.gov/paxworld/). Index search is free; images cost $0.50/page plus a convenience fee.
+- Manual: [PAX Occasional User guide (PDF)](https://lfportal.loudoun.gov/LFPortalInternet/0/edoc/1960913/DTSPAXOccasionalManual.pdf)
+- Or use the free in-person kiosks: Public kiosks, Clerk’s Office, 18 E Market St, Leesburg, Mon–Fri 8:00 a.m.–4:00 p.m. No account needed.
+- After you have grantor / grantee / date (and price only if the index shows it), add a row to `data/loudoun-clerk-deeds.json` and re-run `python3 scripts/rebuild_from_loudoun.py`. Do not add a guessed buyer or a date inferred from a book number.
+
+### Best public pointers (not yet deeds)
+
+Lots that already have a 1999–2000 priced first sale in RPI cite deed books **1711–1750** (Landino `1711--539`, Gordon `1711--520`, Thompson `1714--1293`, Paul `1722--977`, Gavva `1741--779`, Crisp `1750--515`). Three gap lots still show a second book/page in that same range on the RPI legal line. That is a **pointer for PAX Book+Page search**, not enough to put a buyer or price on the map.
+
+| Lot | Address | Possible original book/page (pointer only) | Later legal cite | First RPI instrument to cross-ref | NEWCON permit (not a deed) |
+| --- | --- | --- | --- | --- | --- |
+| 4 | 21662 STILLBROOK FARM DR | — | 200606290056941 | — | 08/12/1999 B00003380100 |
+| 6 | 21670 STILLBROOK FARM DR | — | 200309030115377 | 200309030115377 | 08/12/1999 B00003370100 |
+| 7 | 21674 STILLBROOK FARM DR | — | 200310020130330 | 200310020130330 | 08/12/1999 B00003410100 |
+| 8 | 21678 STILLBROOK FARM DR | — | 2032--1156 | — | 07/26/1999 B00001190100 |
+| 11 | 42810 EVENING BREEZE CT | — | 2165--1055 | — | 09/01/1999 B00011960100 |
+| 13 | 42815 EVENING BREEZE CT | — | 200703200021104 | 200507060072948 | 06/08/1999 B00062540100 |
+| 16 | 42803 EVENING BREEZE CT | — | 200708300064171 | 200708300064171 | 06/08/1999 B00062520100 |
+| 18 | 42795 EVENING BREEZE CT | 1746--2101 | 2017--2042 | — | 06/08/1999 B00062510100 |
+| 19 | 42791 EVENING BREEZE CT | 1771--919 | 2076--1861 | — | 07/26/1999 B00001260100 |
+| 20 | 42787 EVENING BREEZE CT | — | 200403300028789 | 200403300028789 | 07/26/1999 B00001270100 |
+| 22 | 42771 EVENING BREEZE CT | — | 200806250039192 | 200411300126959 | 07/26/1999 B00001180100 |
+| 23 | 42767 EVENING BREEZE CT | — | 200408250090076 | 200408250090076 | 08/12/1999 B00002570100 |
+| 24 | 42762 EVENING BREEZE CT | — | 200403120022516 | 200403120022516 | 08/12/1999 B00003390100 |
+| 25 | 42766 EVENING BREEZE CT | — | 2198--1235 | — | 07/26/1999 B00001280100 |
+| 28 | 21683 STILLBROOK FARM DR | — | 200607280065235 | 200607280065235 | 01/14/2000 B00046500100 |
+| 30 | 21671 STILLBROOK FARM DR | — | 200906290043236, 201112060076260 | 200402100012477 | 11/02/1999 B00035330100 |
+| 32 | 42779 HOLLOWIND CT | — | 200507150075985 | 200507150075985 | 06/25/1999 B00065860100 |
+| 36 | 42763 HOLLOWIND CT | — | 200412300139341, 200403240026087, 201101030000379 | 200403240026087 | 08/09/1999 B00005000100 |
+| 42 | 42739 HOLLOWIND CT | — | 200405260053152 | — | 05/07/1999 B90070030100 |
+| 46 | 42742 HOLLOWIND CT | 1769--79 | 2161--425 | — | 11/02/1999 B00035300100 |
+| 50 | 42758 HOLLOWIND CT | — | 2122--873 | — | 05/07/1999 B90070080100 |
+| 51 | 42762 HOLLOWIND CT | — | 200412060129162 | 200412060129161 | 09/29/1999 B00015820100 |
+| 54 | 21651 STILLBROOK FARM DR | — | 2135--2239 | — | 03/17/2000 B10009960100 |
+
+Every one of the 23 gap lots has a **1999 or January–March 2000 NEWCON** permit on the public RPI permits tab, so the house was built in the original-sale window. That does **not** name the first buyer and was not added as a sale.
+
+### Still county-unavailable (all 23)
+
+Until PAX (or a kiosk) returns parties and a recording date, the map keeps using the first RPI deed. Neighbor-facing: these lots do **not** yet show a clerk-proven 1999–2000 originaler.
 
 ## Lot-by-lot reconciliation (55 houses)
 
@@ -499,7 +560,7 @@ Columns: original buyer = first RPI deed (priced or $0). Still originaler = only
 - PIN `156489619000` · [RPI sales](https://reparcelasmt.loudoun.gov/PT/datalets/datalet.aspx?UseSearch=no&jur=107&mode=sales&pin=156489619000&taxyr=2026)
 - Original buyer (first RPI deed): **GAVVA, SANTOSH R & VINITHA R** · 1999-12-28 · $269,200
 - Still originaler: **Y** · owner eras 1 · priced sales 1
-- Status: added missing county row(s)
+- Status: already matched county
 - County / map history (oldest first):
 
 | Date | Price | Buyer | Seller (RPI) | Instrument | Era? | Notes |
@@ -884,6 +945,8 @@ Columns: original buyer = first RPI deed (priced or $0). Still originaler = only
 - Loudoun County Real Property Information — Sales / Transfers per PIN, e.g. `https://reparcelasmt.loudoun.gov/PT/datalets/datalet.aspx?UseSearch=no&jur=107&mode=sales&pin=<PIN>&taxyr=2026`
 - Loudoun GIS Land Records parcels — Broadlands Section 13, plat 1998-0187 (`https://logis.loudoun.gov/gis/rest/services/COL/LandRecordData/MapServer/4`)
 - Snapshot of the RPI pull used for this audit: `data/loudoun-rpi-sales.json`
+- Clerk public-path lookup (pointers only): `data/loudoun-clerk-lookup.json`
+- Clerk-verified originals overlay (empty until PAX): `data/loudoun-clerk-deeds.json`
 - Refresh: `python3 scripts/fetch_loudoun_sales.py && python3 scripts/rebuild_from_loudoun.py`
 
-Clerk of Circuit Court deed images were not used (PAX login required). Any original 1999–2000 builder deed that is absent from RPI is documented as a gap, not guessed.
+Clerk of Circuit Court **images** were not purchased. The free PAX **index** was not searched because it requires a personal occasional-user account. Any original 1999–2000 builder deed that is absent from RPI is documented as a gap, not guessed.

@@ -1,0 +1,1111 @@
+{
+  "source_note": "Public-path clerk lookup for the 23 Section 13 house lots whose first priced RPI sale is 2001+ or starts at $0. Nothing here is a complete original deed. Book/page and instrument values are official RPI pointers only.",
+  "fetched_date": "2026-09-11",
+  "verified_original_deeds_added_to_map": 0,
+  "paths_tried": [
+    {
+      "name": "Loudoun RPI Sales / Transfers",
+      "url": "https://reparcelasmt.loudoun.gov/PT/datalets/datalet.aspx",
+      "result": "Current tax year (2026) is the only year that returns sales. Older taxyr values return empty. First-sale seller is blank on every gap lot. Instruments on later sales do not reveal the prior grantor/grantee without PAX."
+    },
+    {
+      "name": "Loudoun RPI profile legal description",
+      "url": "https://reparcelasmt.loudoun.gov/PT/datalets/datalet.aspx",
+      "result": "Public. Yields book--page and/or instrument tokens on the legal line. These are pointers, not grantor/grantee/date/price."
+    },
+    {
+      "name": "Loudoun RPI permits (NEWCON)",
+      "url": "https://reparcelasmt.loudoun.gov/PT/datalets/datalet.aspx?mode=permits",
+      "result": "Public. Every gap lot has a 1999 or early-2000 NEWCON permit, so the house existed in the original-sale window. A permit is not a deed and was not added to map sales."
+    },
+    {
+      "name": "Clerk PAX occasional-user index",
+      "url": "https://lisweb.loudoun.gov/paxworld/",
+      "result": "Login wall. Free index after Create Account. Search/API routes without a session return 404. No account was created (would require inventing a personal identity). Stopped this path."
+    },
+    {
+      "name": "Clerk PAX subscription download site",
+      "url": "https://lisweb.loudoun.gov/PAXSubscription/",
+      "result": "Same DTS login wall."
+    },
+    {
+      "name": "Clerk Online Land Records (county page)",
+      "url": "https://www.loudoun.gov/Clerk/OnlineLandRecords",
+      "result": "Explains free occasional-user signup and $0.50/page images. Does not expose the index without an account."
+    },
+    {
+      "name": "LandMARC (Tyler EnerGov)",
+      "url": "https://loudouncountyvaeg.tylerhost.net/prod/selfservice",
+      "result": "Permits and land-development applications, not the deed index. GIS LMARC/LandMARC_Permits is the same domain."
+    },
+    {
+      "name": "Loudoun GIS LandRecords / LandRecordData / LMIS platfile",
+      "url": "https://logis.loudoun.gov/gis/rest/services",
+      "result": "No grantor/grantee/consideration. LMISVPC_PAR_CURR owner-start/sale dates are the current owner, not the 1999 builder."
+    },
+    {
+      "name": "Public Real Estate Sales Reports",
+      "url": "https://www.loudoun.gov/649/Public-Real-Estate-Reports",
+      "result": "Downloadable sales reports start 2013. Too late for 1999\u20132000 builder deeds."
+    },
+    {
+      "name": "Historic deed indexes",
+      "url": "https://www.loudoun.gov/2184/Deeds",
+      "result": "PDF indexes 1757\u20131903 only. FamilySearch / LVA films likewise stop far before 1999."
+    }
+  ],
+  "login_paul_must_do": {
+    "system": "Loudoun Clerk of the Circuit Court PAX \u2014 Occasional User (free index)",
+    "start_here": "https://www.loudoun.gov/Clerk/OnlineLandRecords",
+    "signup_login": "https://lisweb.loudoun.gov/paxworld/",
+    "manual_pdf": "https://lfportal.loudoun.gov/LFPortalInternet/0/edoc/1960913/DTSPAXOccasionalManual.pdf",
+    "what_to_create": "A free occasional-user account in your own name (Create Account on the PAX page). Index lookup is free. Deed images are $0.50/page plus a convenience fee if you want copies.",
+    "in_person_free": "Public kiosks, Clerk\u2019s Office, 18 E Market St, Leesburg, Mon\u2013Fri 8:00 a.m.\u20134:00 p.m. No account needed.",
+    "staff_email": "HistoricRecords@loudoun.gov (they will not run the research; they can help with instrument/page counts once you have a cite)",
+    "how_to_search": [
+      "Instrument Search with each lot\u2019s first-RPI instrument and check Include Cross References",
+      "Instrument Search by Book + Page for the three lots that still show a 1711\u20131786 book on the RPI legal line (18, 19, 46)",
+      "Advanced/Legal Search for BROADLANDS SEC 13 LOT <n>",
+      "Name Search on the first RPI buyer as grantee, then read the grantor and any earlier deed"
+    ],
+    "do_not": "Do not guess buyers or prices from Zillow, book-number order, or NEWCON permit dates."
+  },
+  "known_1999_2000_original_book_pages_from_rpi": [
+    {
+      "lot": "37",
+      "address": "42759 HOLLOWIND CT",
+      "buyer": "LANDINO, JOSEPH JR & KATHERINE",
+      "date": "1999-09-03",
+      "book": "1711",
+      "page": "539"
+    },
+    {
+      "lot": "35",
+      "address": "42767 HOLLOWIND CT",
+      "buyer": "GORDON, STEVEN C & SANDRA GETTER",
+      "date": "1999-09-03",
+      "book": "1711",
+      "page": "520"
+    },
+    {
+      "lot": "44",
+      "address": "42734 HOLLOWIND CT",
+      "buyer": "THOMPSON, RAYMOND M JR & KARYN E",
+      "date": "1999-09-21",
+      "book": "1714",
+      "page": "1293"
+    },
+    {
+      "lot": "52",
+      "address": "42770 HOLLOWIND CT",
+      "buyer": "MILLER, PAUL & JESSICA CHESTNUT",
+      "date": "1999-10-19",
+      "book": "1722",
+      "page": "977"
+    },
+    {
+      "lot": "31",
+      "address": "21663 STILLBROOK FARM DR",
+      "buyer": "GAVVA, SANTOSH R & VINITHA R",
+      "date": "1999-12-28",
+      "book": "1741",
+      "page": "779"
+    },
+    {
+      "lot": "5",
+      "address": "21666 STILLBROOK FARM DR",
+      "buyer": "CRISP, DANIEL E & KIM D",
+      "date": "2000-02-02",
+      "book": "1750",
+      "page": "515"
+    }
+  ],
+  "observed_original_book_range": {
+    "low": 1711,
+    "high": 1786,
+    "note": "Taken from lots that already have a 1999\u20132000 priced first sale in RPI. A gap lot\u2019s legal line in this range is a pointer only \u2014 not enough to add a sale."
+  },
+  "lots": [
+    {
+      "lot": "4",
+      "pin": "156491719000",
+      "address": "21662 STILLBROOK FARM DR",
+      "clerk_original_deed_found": false,
+      "reason_still_unavailable": "Clerk PAX index requires a free occasional-user account; no public endpoint returned grantor, grantee, date, and price.",
+      "first_rpi_deed": {
+        "date": "2002-12-30",
+        "price": "$445,000",
+        "buyer": "SICA, ALBERT J & CAROLYN T R/S",
+        "seller": "",
+        "instrument": "",
+        "valuation": "MARKET SALE",
+        "note": ""
+      },
+      "rpi_legal_lines": [
+        "BROADLANDS SEC 13 LOT 4",
+        "200606290056941"
+      ],
+      "book_page_refs": [],
+      "instrument_refs_on_legal": [
+        {
+          "instrument": "200606290056941",
+          "classification": "later_instrument_on_legal_line",
+          "pax_search": "PAX Instrument Search \u2192 Instrument ID 200606290056941"
+        }
+      ],
+      "current_owner_instrument": "200606290056941",
+      "newcon_permit_not_a_deed": {
+        "date": "08/12/1999",
+        "number": "B00003380100",
+        "price": "100000",
+        "purpose": "NEWCON"
+      },
+      "pax_search_hints": [
+        "PAX Instrument Search \u2192 Instrument ID 200606290056941 (legal-line instrument; often the later RPI sale)",
+        "PAX Advanced/Legal Search \u2192 legal contains BROADLANDS SEC 13 LOT 4",
+        "PAX Name Search \u2192 first RPI buyer as grantee, then read grantor + earlier cross-refs"
+      ]
+    },
+    {
+      "lot": "6",
+      "pin": "156491305000",
+      "address": "21670 STILLBROOK FARM DR",
+      "clerk_original_deed_found": false,
+      "reason_still_unavailable": "Clerk PAX index requires a free occasional-user account; no public endpoint returned grantor, grantee, date, and price.",
+      "first_rpi_deed": {
+        "date": "2003-09-03",
+        "price": "$450,250",
+        "buyer": "HARGENRATER, MARK E & YELENA R R/S",
+        "seller": "",
+        "instrument": "200309030115377",
+        "valuation": "MARKET SALE",
+        "note": "SALE FOR 5 LOTS"
+      },
+      "rpi_legal_lines": [
+        "BROADLANDS SEC 13 LOT 6",
+        "200309030115377"
+      ],
+      "book_page_refs": [],
+      "instrument_refs_on_legal": [
+        {
+          "instrument": "200309030115377",
+          "classification": "later_instrument_on_legal_line",
+          "pax_search": "PAX Instrument Search \u2192 Instrument ID 200309030115377"
+        }
+      ],
+      "current_owner_instrument": "202204180022929",
+      "newcon_permit_not_a_deed": {
+        "date": "08/12/1999",
+        "number": "B00003370100",
+        "price": "100000",
+        "purpose": "NEWCON"
+      },
+      "pax_search_hints": [
+        "PAX Instrument Search \u2192 Instrument ID 200309030115377 (legal-line instrument; often the later RPI sale)",
+        "PAX Instrument Search \u2192 Instrument ID 200309030115377 (first RPI row \u2014 use Include Cross References)",
+        "PAX Advanced/Legal Search \u2192 legal contains BROADLANDS SEC 13 LOT 6",
+        "PAX Name Search \u2192 first RPI buyer as grantee, then read grantor + earlier cross-refs"
+      ]
+    },
+    {
+      "lot": "7",
+      "pin": "156391198000",
+      "address": "21674 STILLBROOK FARM DR",
+      "clerk_original_deed_found": false,
+      "reason_still_unavailable": "Clerk PAX index requires a free occasional-user account; no public endpoint returned grantor, grantee, date, and price.",
+      "first_rpi_deed": {
+        "date": "2003-10-02",
+        "price": "$488,000",
+        "buyer": "LEE, JEFFREY B & DONNA K R/S",
+        "seller": "",
+        "instrument": "200310020130330",
+        "valuation": "MARKET SALE",
+        "note": ""
+      },
+      "rpi_legal_lines": [
+        "BROADLANDS SEC 13 LOT 7",
+        "200310020130330"
+      ],
+      "book_page_refs": [],
+      "instrument_refs_on_legal": [
+        {
+          "instrument": "200310020130330",
+          "classification": "later_instrument_on_legal_line",
+          "pax_search": "PAX Instrument Search \u2192 Instrument ID 200310020130330"
+        }
+      ],
+      "current_owner_instrument": "202503310013558",
+      "newcon_permit_not_a_deed": {
+        "date": "08/12/1999",
+        "number": "B00003410100",
+        "price": "100000",
+        "purpose": "NEWCON"
+      },
+      "pax_search_hints": [
+        "PAX Instrument Search \u2192 Instrument ID 200310020130330 (legal-line instrument; often the later RPI sale)",
+        "PAX Instrument Search \u2192 Instrument ID 200310020130330 (first RPI row \u2014 use Include Cross References)",
+        "PAX Advanced/Legal Search \u2192 legal contains BROADLANDS SEC 13 LOT 7",
+        "PAX Name Search \u2192 first RPI buyer as grantee, then read grantor + earlier cross-refs"
+      ]
+    },
+    {
+      "lot": "8",
+      "pin": "156390793000",
+      "address": "21678 STILLBROOK FARM DR",
+      "clerk_original_deed_found": false,
+      "reason_still_unavailable": "Clerk PAX index requires a free occasional-user account; no public endpoint returned grantor, grantee, date, and price.",
+      "first_rpi_deed": {
+        "date": "2001-10-30",
+        "price": "$395,000",
+        "buyer": "MALONEY, JOSEPH W & JOYANN R",
+        "seller": "",
+        "instrument": "",
+        "valuation": "MARKET SALE",
+        "note": ""
+      },
+      "rpi_legal_lines": [
+        "BROADLANDS SEC 13 LOT 8",
+        "2032--1156"
+      ],
+      "book_page_refs": [
+        {
+          "book": "2032",
+          "page": "1156",
+          "classification": "later_deed_book_likely_post_2000",
+          "pax_search": "PAX Instrument Search \u2192 Book 2032 Page 1156"
+        }
+      ],
+      "instrument_refs_on_legal": [],
+      "current_owner_instrument": "202403010007785",
+      "newcon_permit_not_a_deed": {
+        "date": "07/26/1999",
+        "number": "B00001190100",
+        "price": "100000",
+        "purpose": "NEWCON"
+      },
+      "pax_search_hints": [
+        "PAX Instrument Search \u2192 Book 2032 Page 1156 (likely a later deed, not the 1999\u20132000 builder sale)",
+        "PAX Advanced/Legal Search \u2192 legal contains BROADLANDS SEC 13 LOT 8",
+        "PAX Name Search \u2192 first RPI buyer as grantee, then read grantor + earlier cross-refs"
+      ]
+    },
+    {
+      "lot": "11",
+      "pin": "156392083000",
+      "address": "42810 EVENING BREEZE CT",
+      "clerk_original_deed_found": false,
+      "reason_still_unavailable": "Clerk PAX index requires a free occasional-user account; no public endpoint returned grantor, grantee, date, and price.",
+      "first_rpi_deed": {
+        "date": "2002-04-30",
+        "price": "$399,900",
+        "buyer": "TROESTER, DOUGLAS C & KAREN L",
+        "seller": "",
+        "instrument": "",
+        "valuation": "MARKET SALE",
+        "note": ""
+      },
+      "rpi_legal_lines": [
+        "BROADLANDS SEC 13 LOT 11",
+        "2165--1055"
+      ],
+      "book_page_refs": [
+        {
+          "book": "2165",
+          "page": "1055",
+          "classification": "later_deed_book_likely_post_2000",
+          "pax_search": "PAX Instrument Search \u2192 Book 2165 Page 1055"
+        }
+      ],
+      "instrument_refs_on_legal": [],
+      "current_owner_instrument": "202501140001952",
+      "newcon_permit_not_a_deed": {
+        "date": "09/01/1999",
+        "number": "B00011960100",
+        "price": "100000",
+        "purpose": "NEWCON"
+      },
+      "pax_search_hints": [
+        "PAX Instrument Search \u2192 Book 2165 Page 1055 (likely a later deed, not the 1999\u20132000 builder sale)",
+        "PAX Advanced/Legal Search \u2192 legal contains BROADLANDS SEC 13 LOT 11",
+        "PAX Name Search \u2192 first RPI buyer as grantee, then read grantor + earlier cross-refs"
+      ]
+    },
+    {
+      "lot": "13",
+      "pin": "156392566000",
+      "address": "42815 EVENING BREEZE CT",
+      "clerk_original_deed_found": false,
+      "reason_still_unavailable": "Clerk PAX index requires a free occasional-user account; no public endpoint returned grantor, grantee, date, and price.",
+      "first_rpi_deed": {
+        "date": "2005-07-06",
+        "price": "$739,500",
+        "buyer": "DZWILEWSKI, PETE G & TRACY J R/S",
+        "seller": "",
+        "instrument": "200507060072948",
+        "valuation": "MARKET SALE",
+        "note": ""
+      },
+      "rpi_legal_lines": [
+        "BROADLANDS SEC 13 LOT 13",
+        "200703200021104"
+      ],
+      "book_page_refs": [],
+      "instrument_refs_on_legal": [
+        {
+          "instrument": "200703200021104",
+          "classification": "later_instrument_on_legal_line",
+          "pax_search": "PAX Instrument Search \u2192 Instrument ID 200703200021104"
+        }
+      ],
+      "current_owner_instrument": "200703200021104",
+      "newcon_permit_not_a_deed": {
+        "date": "06/08/1999",
+        "number": "B00062540100",
+        "price": "100000",
+        "purpose": "NEWCON"
+      },
+      "pax_search_hints": [
+        "PAX Instrument Search \u2192 Instrument ID 200703200021104 (legal-line instrument; often the later RPI sale)",
+        "PAX Instrument Search \u2192 Instrument ID 200507060072948 (first RPI row \u2014 use Include Cross References)",
+        "PAX Advanced/Legal Search \u2192 legal contains BROADLANDS SEC 13 LOT 13",
+        "PAX Name Search \u2192 first RPI buyer as grantee, then read grantor + earlier cross-refs"
+      ]
+    },
+    {
+      "lot": "16",
+      "pin": "156389962000",
+      "address": "42803 EVENING BREEZE CT",
+      "clerk_original_deed_found": false,
+      "reason_still_unavailable": "Clerk PAX index requires a free occasional-user account; no public endpoint returned grantor, grantee, date, and price.",
+      "first_rpi_deed": {
+        "date": "2007-08-30",
+        "price": "$585,000",
+        "buyer": "BANKUS, ANDREW KYLE & DAWNA R R/S",
+        "seller": "",
+        "instrument": "200708300064171",
+        "valuation": "MARKET SALE",
+        "note": ""
+      },
+      "rpi_legal_lines": [
+        "BROADLANDS SEC 13 LOT 16",
+        "200708300064171"
+      ],
+      "book_page_refs": [],
+      "instrument_refs_on_legal": [
+        {
+          "instrument": "200708300064171",
+          "classification": "later_instrument_on_legal_line",
+          "pax_search": "PAX Instrument Search \u2192 Instrument ID 200708300064171"
+        }
+      ],
+      "current_owner_instrument": "202110260109284",
+      "newcon_permit_not_a_deed": {
+        "date": "06/08/1999",
+        "number": "B00062520100",
+        "price": "100000",
+        "purpose": "NEWCON"
+      },
+      "pax_search_hints": [
+        "PAX Instrument Search \u2192 Instrument ID 200708300064171 (legal-line instrument; often the later RPI sale)",
+        "PAX Instrument Search \u2192 Instrument ID 200708300064171 (first RPI row \u2014 use Include Cross References)",
+        "PAX Advanced/Legal Search \u2192 legal contains BROADLANDS SEC 13 LOT 16",
+        "PAX Name Search \u2192 first RPI buyer as grantee, then read grantor + earlier cross-refs"
+      ]
+    },
+    {
+      "lot": "18",
+      "pin": "156388062000",
+      "address": "42795 EVENING BREEZE CT",
+      "clerk_original_deed_found": false,
+      "reason_still_unavailable": "Clerk PAX index requires a free occasional-user account; no public endpoint returned grantor, grantee, date, and price.",
+      "first_rpi_deed": {
+        "date": "2001-10-05",
+        "price": "$0",
+        "buyer": "CERVANTES, EDWARD R & DEBORAH A",
+        "seller": "",
+        "instrument": "",
+        "valuation": "N/A",
+        "note": ""
+      },
+      "rpi_legal_lines": [
+        "BROADLANDS SEC 13 LOT 18",
+        "2017--2042 D/G 1746--2101"
+      ],
+      "book_page_refs": [
+        {
+          "book": "2017",
+          "page": "2042",
+          "classification": "later_deed_book_likely_post_2000",
+          "pax_search": "PAX Instrument Search \u2192 Book 2017 Page 2042"
+        },
+        {
+          "book": "1746",
+          "page": "2101",
+          "classification": "same_book_range_as_known_1999_2000_originals",
+          "pax_search": "PAX Instrument Search \u2192 Book 1746 Page 2101"
+        }
+      ],
+      "instrument_refs_on_legal": [],
+      "current_owner_instrument": "202110280110191",
+      "newcon_permit_not_a_deed": {
+        "date": "06/08/1999",
+        "number": "B00062510100",
+        "price": "100000",
+        "purpose": "NEWCON"
+      },
+      "pax_search_hints": [
+        "PAX Instrument Search \u2192 Book 2017 Page 2042 (likely a later deed, not the 1999\u20132000 builder sale)",
+        "PAX Instrument Search \u2192 Book 1746 Page 2101 (best public pointer toward a possible original deed)",
+        "PAX Advanced/Legal Search \u2192 legal contains BROADLANDS SEC 13 LOT 18",
+        "PAX Name Search \u2192 first RPI buyer as grantee, then read grantor + earlier cross-refs"
+      ]
+    },
+    {
+      "lot": "19",
+      "pin": "156388471000",
+      "address": "42791 EVENING BREEZE CT",
+      "clerk_original_deed_found": false,
+      "reason_still_unavailable": "Clerk PAX index requires a free occasional-user account; no public endpoint returned grantor, grantee, date, and price.",
+      "first_rpi_deed": {
+        "date": "2001-12-26",
+        "price": "$0",
+        "buyer": "GEORGE, JEFFREY A & KELLY R",
+        "seller": "",
+        "instrument": "",
+        "valuation": "N/A",
+        "note": ""
+      },
+      "rpi_legal_lines": [
+        "BROADLANDS SEC 13 LOT 19",
+        "2076--1861 D/G 1771--919"
+      ],
+      "book_page_refs": [
+        {
+          "book": "2076",
+          "page": "1861",
+          "classification": "later_deed_book_likely_post_2000",
+          "pax_search": "PAX Instrument Search \u2192 Book 2076 Page 1861"
+        },
+        {
+          "book": "1771",
+          "page": "919",
+          "classification": "same_book_range_as_known_1999_2000_originals",
+          "pax_search": "PAX Instrument Search \u2192 Book 1771 Page 919"
+        }
+      ],
+      "instrument_refs_on_legal": [],
+      "current_owner_instrument": "",
+      "newcon_permit_not_a_deed": {
+        "date": "07/26/1999",
+        "number": "B00001260100",
+        "price": "100000",
+        "purpose": "NEWCON"
+      },
+      "pax_search_hints": [
+        "PAX Instrument Search \u2192 Book 2076 Page 1861 (likely a later deed, not the 1999\u20132000 builder sale)",
+        "PAX Instrument Search \u2192 Book 1771 Page 919 (best public pointer toward a possible original deed)",
+        "PAX Advanced/Legal Search \u2192 legal contains BROADLANDS SEC 13 LOT 19",
+        "PAX Name Search \u2192 first RPI buyer as grantee, then read grantor + earlier cross-refs"
+      ]
+    },
+    {
+      "lot": "20",
+      "pin": "156388379000",
+      "address": "42787 EVENING BREEZE CT",
+      "clerk_original_deed_found": false,
+      "reason_still_unavailable": "Clerk PAX index requires a free occasional-user account; no public endpoint returned grantor, grantee, date, and price.",
+      "first_rpi_deed": {
+        "date": "2004-03-30",
+        "price": "$595,000",
+        "buyer": "COLANGELO, DAVID A & LISA D",
+        "seller": "",
+        "instrument": "200403300028789",
+        "valuation": "MARKET SALE",
+        "note": ""
+      },
+      "rpi_legal_lines": [
+        "BROADLANDS SEC 13 LOT 20",
+        "200403300028789"
+      ],
+      "book_page_refs": [],
+      "instrument_refs_on_legal": [
+        {
+          "instrument": "200403300028789",
+          "classification": "later_instrument_on_legal_line",
+          "pax_search": "PAX Instrument Search \u2192 Instrument ID 200403300028789"
+        }
+      ],
+      "current_owner_instrument": "200403300028789",
+      "newcon_permit_not_a_deed": {
+        "date": "07/26/1999",
+        "number": "B00001270100",
+        "price": "100000",
+        "purpose": "NEWCON"
+      },
+      "pax_search_hints": [
+        "PAX Instrument Search \u2192 Instrument ID 200403300028789 (legal-line instrument; often the later RPI sale)",
+        "PAX Instrument Search \u2192 Instrument ID 200403300028789 (first RPI row \u2014 use Include Cross References)",
+        "PAX Advanced/Legal Search \u2192 legal contains BROADLANDS SEC 13 LOT 20",
+        "PAX Name Search \u2192 first RPI buyer as grantee, then read grantor + earlier cross-refs"
+      ]
+    },
+    {
+      "lot": "22",
+      "pin": "156387092000",
+      "address": "42771 EVENING BREEZE CT",
+      "clerk_original_deed_found": false,
+      "reason_still_unavailable": "Clerk PAX index requires a free occasional-user account; no public endpoint returned grantor, grantee, date, and price.",
+      "first_rpi_deed": {
+        "date": "2004-11-30",
+        "price": "$560,000",
+        "buyer": "FOCHT, ERIC M & TERRI M SCANLAN R/S",
+        "seller": "",
+        "instrument": "200411300126959",
+        "valuation": "MARKET SALE",
+        "note": ""
+      },
+      "rpi_legal_lines": [
+        "BROADLANDS SEC 13 LOT 22",
+        "200806250039192"
+      ],
+      "book_page_refs": [],
+      "instrument_refs_on_legal": [
+        {
+          "instrument": "200806250039192",
+          "classification": "later_instrument_on_legal_line",
+          "pax_search": "PAX Instrument Search \u2192 Instrument ID 200806250039192"
+        }
+      ],
+      "current_owner_instrument": "200806250039192",
+      "newcon_permit_not_a_deed": {
+        "date": "07/26/1999",
+        "number": "B00001180100",
+        "price": "100000",
+        "purpose": "NEWCON"
+      },
+      "pax_search_hints": [
+        "PAX Instrument Search \u2192 Instrument ID 200806250039192 (legal-line instrument; often the later RPI sale)",
+        "PAX Instrument Search \u2192 Instrument ID 200411300126959 (first RPI row \u2014 use Include Cross References)",
+        "PAX Advanced/Legal Search \u2192 legal contains BROADLANDS SEC 13 LOT 22",
+        "PAX Name Search \u2192 first RPI buyer as grantee, then read grantor + earlier cross-refs"
+      ]
+    },
+    {
+      "lot": "23",
+      "pin": "156386392000",
+      "address": "42767 EVENING BREEZE CT",
+      "clerk_original_deed_found": false,
+      "reason_still_unavailable": "Clerk PAX index requires a free occasional-user account; no public endpoint returned grantor, grantee, date, and price.",
+      "first_rpi_deed": {
+        "date": "2004-08-25",
+        "price": "$550,000",
+        "buyer": "GRINDER, JOSEPH B II & MICHAELA R/S",
+        "seller": "",
+        "instrument": "200408250090076",
+        "valuation": "MARKET SALE",
+        "note": ""
+      },
+      "rpi_legal_lines": [
+        "BROADLANDS SEC 13 LOT 23",
+        "200408250090076"
+      ],
+      "book_page_refs": [],
+      "instrument_refs_on_legal": [
+        {
+          "instrument": "200408250090076",
+          "classification": "later_instrument_on_legal_line",
+          "pax_search": "PAX Instrument Search \u2192 Instrument ID 200408250090076"
+        }
+      ],
+      "current_owner_instrument": "202603200013812",
+      "newcon_permit_not_a_deed": {
+        "date": "08/12/1999",
+        "number": "B00002570100",
+        "price": "100000",
+        "purpose": "NEWCON"
+      },
+      "pax_search_hints": [
+        "PAX Instrument Search \u2192 Instrument ID 200408250090076 (legal-line instrument; often the later RPI sale)",
+        "PAX Instrument Search \u2192 Instrument ID 200408250090076 (first RPI row \u2014 use Include Cross References)",
+        "PAX Advanced/Legal Search \u2192 legal contains BROADLANDS SEC 13 LOT 23",
+        "PAX Name Search \u2192 first RPI buyer as grantee, then read grantor + earlier cross-refs"
+      ]
+    },
+    {
+      "lot": "24",
+      "pin": "156486214000",
+      "address": "42762 EVENING BREEZE CT",
+      "clerk_original_deed_found": false,
+      "reason_still_unavailable": "Clerk PAX index requires a free occasional-user account; no public endpoint returned grantor, grantee, date, and price.",
+      "first_rpi_deed": {
+        "date": "2004-03-12",
+        "price": "$492,000",
+        "buyer": "MORAN, BRIAN R & SHERYL S R/S",
+        "seller": "",
+        "instrument": "200403120022516",
+        "valuation": "MARKET SALE",
+        "note": ""
+      },
+      "rpi_legal_lines": [
+        "BROADLANDS SEC 13 LOT 24",
+        "200403120022516"
+      ],
+      "book_page_refs": [],
+      "instrument_refs_on_legal": [
+        {
+          "instrument": "200403120022516",
+          "classification": "later_instrument_on_legal_line",
+          "pax_search": "PAX Instrument Search \u2192 Instrument ID 200403120022516"
+        }
+      ],
+      "current_owner_instrument": "200403120022517",
+      "newcon_permit_not_a_deed": {
+        "date": "08/12/1999",
+        "number": "B00003390100",
+        "price": "100000",
+        "purpose": "NEWCON"
+      },
+      "pax_search_hints": [
+        "PAX Instrument Search \u2192 Instrument ID 200403120022516 (legal-line instrument; often the later RPI sale)",
+        "PAX Instrument Search \u2192 Instrument ID 200403120022516 (first RPI row \u2014 use Include Cross References)",
+        "PAX Advanced/Legal Search \u2192 legal contains BROADLANDS SEC 13 LOT 24",
+        "PAX Name Search \u2192 first RPI buyer as grantee, then read grantor + earlier cross-refs"
+      ]
+    },
+    {
+      "lot": "25",
+      "pin": "156486915000",
+      "address": "42766 EVENING BREEZE CT",
+      "clerk_original_deed_found": false,
+      "reason_still_unavailable": "Clerk PAX index requires a free occasional-user account; no public endpoint returned grantor, grantee, date, and price.",
+      "first_rpi_deed": {
+        "date": "2002-06-20",
+        "price": "$415,000",
+        "buyer": "MURPHY, JOHN P JR & SHARON C",
+        "seller": "",
+        "instrument": "",
+        "valuation": "MARKET SALE",
+        "note": ""
+      },
+      "rpi_legal_lines": [
+        "BROADLANDS SEC 13 LOT 25",
+        "2198--1235"
+      ],
+      "book_page_refs": [
+        {
+          "book": "2198",
+          "page": "1235",
+          "classification": "later_deed_book_likely_post_2000",
+          "pax_search": "PAX Instrument Search \u2192 Book 2198 Page 1235"
+        }
+      ],
+      "instrument_refs_on_legal": [],
+      "current_owner_instrument": "202206060033612",
+      "newcon_permit_not_a_deed": {
+        "date": "07/26/1999",
+        "number": "B00001280100",
+        "price": "100000",
+        "purpose": "NEWCON"
+      },
+      "pax_search_hints": [
+        "PAX Instrument Search \u2192 Book 2198 Page 1235 (likely a later deed, not the 1999\u20132000 builder sale)",
+        "PAX Advanced/Legal Search \u2192 legal contains BROADLANDS SEC 13 LOT 25",
+        "PAX Name Search \u2192 first RPI buyer as grantee, then read grantor + earlier cross-refs"
+      ]
+    },
+    {
+      "lot": "28",
+      "pin": "156388898000",
+      "address": "21683 STILLBROOK FARM DR",
+      "clerk_original_deed_found": false,
+      "reason_still_unavailable": "Clerk PAX index requires a free occasional-user account; no public endpoint returned grantor, grantee, date, and price.",
+      "first_rpi_deed": {
+        "date": "2006-07-28",
+        "price": "$635,000",
+        "buyer": "LAMBDIN, TODD & ERICA R/S",
+        "seller": "",
+        "instrument": "200607280065235",
+        "valuation": "MARKET SALE",
+        "note": ""
+      },
+      "rpi_legal_lines": [
+        "BROADLANDS SEC 13 LOT 28",
+        "200607280065235"
+      ],
+      "book_page_refs": [],
+      "instrument_refs_on_legal": [
+        {
+          "instrument": "200607280065235",
+          "classification": "later_instrument_on_legal_line",
+          "pax_search": "PAX Instrument Search \u2192 Instrument ID 200607280065235"
+        }
+      ],
+      "current_owner_instrument": "202110250108701",
+      "newcon_permit_not_a_deed": {
+        "date": "01/14/2000",
+        "number": "B00046500100",
+        "price": "125000",
+        "purpose": "NEWCON"
+      },
+      "pax_search_hints": [
+        "PAX Instrument Search \u2192 Instrument ID 200607280065235 (legal-line instrument; often the later RPI sale)",
+        "PAX Instrument Search \u2192 Instrument ID 200607280065235 (first RPI row \u2014 use Include Cross References)",
+        "PAX Advanced/Legal Search \u2192 legal contains BROADLANDS SEC 13 LOT 28",
+        "PAX Name Search \u2192 first RPI buyer as grantee, then read grantor + earlier cross-refs"
+      ]
+    },
+    {
+      "lot": "30",
+      "pin": "156489512000",
+      "address": "21671 STILLBROOK FARM DR",
+      "clerk_original_deed_found": false,
+      "reason_still_unavailable": "Clerk PAX index requires a free occasional-user account; no public endpoint returned grantor, grantee, date, and price.",
+      "first_rpi_deed": {
+        "date": "2004-02-10",
+        "price": "$0",
+        "buyer": "WATKINS, ALAN G",
+        "seller": "",
+        "instrument": "200402100012477",
+        "valuation": "N/A",
+        "note": ""
+      },
+      "rpi_legal_lines": [
+        "BROADLANDS SEC 13 LOT 30",
+        "200906290043236 201112060076260 D/G"
+      ],
+      "book_page_refs": [],
+      "instrument_refs_on_legal": [
+        {
+          "instrument": "200906290043236",
+          "classification": "later_instrument_on_legal_line",
+          "pax_search": "PAX Instrument Search \u2192 Instrument ID 200906290043236"
+        },
+        {
+          "instrument": "201112060076260",
+          "classification": "later_instrument_on_legal_line",
+          "pax_search": "PAX Instrument Search \u2192 Instrument ID 201112060076260"
+        }
+      ],
+      "current_owner_instrument": "201112060076260",
+      "newcon_permit_not_a_deed": {
+        "date": "11/02/1999",
+        "number": "B00035330100",
+        "price": "95000",
+        "purpose": "NEWCON"
+      },
+      "pax_search_hints": [
+        "PAX Instrument Search \u2192 Instrument ID 200906290043236 (legal-line instrument; often the later RPI sale)",
+        "PAX Instrument Search \u2192 Instrument ID 201112060076260 (legal-line instrument; often the later RPI sale)",
+        "PAX Instrument Search \u2192 Instrument ID 200402100012477 (first RPI row \u2014 use Include Cross References)",
+        "PAX Advanced/Legal Search \u2192 legal contains BROADLANDS SEC 13 LOT 30",
+        "PAX Name Search \u2192 first RPI buyer as grantee, then read grantor + earlier cross-refs"
+      ]
+    },
+    {
+      "lot": "32",
+      "pin": "156488619000",
+      "address": "42779 HOLLOWIND CT",
+      "clerk_original_deed_found": false,
+      "reason_still_unavailable": "Clerk PAX index requires a free occasional-user account; no public endpoint returned grantor, grantee, date, and price.",
+      "first_rpi_deed": {
+        "date": "2005-07-15",
+        "price": "$685,000",
+        "buyer": "JONNADULA, VASUDEVARAO & SUJATHA",
+        "seller": "",
+        "instrument": "200507150075985",
+        "valuation": "MARKET SALE",
+        "note": ""
+      },
+      "rpi_legal_lines": [
+        "BROADLANDS SEC 13 LOT 32",
+        "200507150075985"
+      ],
+      "book_page_refs": [],
+      "instrument_refs_on_legal": [
+        {
+          "instrument": "200507150075985",
+          "classification": "later_instrument_on_legal_line",
+          "pax_search": "PAX Instrument Search \u2192 Instrument ID 200507150075985"
+        }
+      ],
+      "current_owner_instrument": "200507150075985",
+      "newcon_permit_not_a_deed": {
+        "date": "06/25/1999",
+        "number": "B00065860100",
+        "price": "95000",
+        "purpose": "NEWCON"
+      },
+      "pax_search_hints": [
+        "PAX Instrument Search \u2192 Instrument ID 200507150075985 (legal-line instrument; often the later RPI sale)",
+        "PAX Instrument Search \u2192 Instrument ID 200507150075985 (first RPI row \u2014 use Include Cross References)",
+        "PAX Advanced/Legal Search \u2192 legal contains BROADLANDS SEC 13 LOT 32",
+        "PAX Name Search \u2192 first RPI buyer as grantee, then read grantor + earlier cross-refs"
+      ]
+    },
+    {
+      "lot": "36",
+      "pin": "156487042000",
+      "address": "42763 HOLLOWIND CT",
+      "clerk_original_deed_found": false,
+      "reason_still_unavailable": "Clerk PAX index requires a free occasional-user account; no public endpoint returned grantor, grantee, date, and price.",
+      "first_rpi_deed": {
+        "date": "2004-03-24",
+        "price": "$452,000",
+        "buyer": "REDDY, SHAILA",
+        "seller": "",
+        "instrument": "200403240026087",
+        "valuation": "MARKET SALE",
+        "note": ""
+      },
+      "rpi_legal_lines": [
+        "BROADLANDS SEC 13 LOT 36",
+        "200412300139341 Q/C 200403240026087",
+        "201101030000379 D/C"
+      ],
+      "book_page_refs": [],
+      "instrument_refs_on_legal": [
+        {
+          "instrument": "200412300139341",
+          "classification": "later_instrument_on_legal_line",
+          "pax_search": "PAX Instrument Search \u2192 Instrument ID 200412300139341"
+        },
+        {
+          "instrument": "200403240026087",
+          "classification": "later_instrument_on_legal_line",
+          "pax_search": "PAX Instrument Search \u2192 Instrument ID 200403240026087"
+        },
+        {
+          "instrument": "201101030000379",
+          "classification": "later_instrument_on_legal_line",
+          "pax_search": "PAX Instrument Search \u2192 Instrument ID 201101030000379"
+        }
+      ],
+      "current_owner_instrument": "201807090039230",
+      "newcon_permit_not_a_deed": {
+        "date": "08/09/1999",
+        "number": "B00005000100",
+        "price": "125000",
+        "purpose": "NEWCON"
+      },
+      "pax_search_hints": [
+        "PAX Instrument Search \u2192 Instrument ID 200412300139341 (legal-line instrument; often the later RPI sale)",
+        "PAX Instrument Search \u2192 Instrument ID 200403240026087 (legal-line instrument; often the later RPI sale)",
+        "PAX Instrument Search \u2192 Instrument ID 201101030000379 (legal-line instrument; often the later RPI sale)",
+        "PAX Instrument Search \u2192 Instrument ID 200403240026087 (first RPI row \u2014 use Include Cross References)",
+        "PAX Advanced/Legal Search \u2192 legal contains BROADLANDS SEC 13 LOT 36",
+        "PAX Name Search \u2192 first RPI buyer as grantee, then read grantor + earlier cross-refs"
+      ]
+    },
+    {
+      "lot": "42",
+      "pin": "156484850000",
+      "address": "42739 HOLLOWIND CT",
+      "clerk_original_deed_found": false,
+      "reason_still_unavailable": "Clerk PAX index requires a free occasional-user account; no public endpoint returned grantor, grantee, date, and price.",
+      "first_rpi_deed": {
+        "date": "2001-03-06",
+        "price": "$510,500",
+        "buyer": "NELSON, GAYLE J",
+        "seller": "",
+        "instrument": "",
+        "valuation": "MARKET SALE",
+        "note": ""
+      },
+      "rpi_legal_lines": [
+        "BROADLANDS SEC 13 LOT 42",
+        "200405260053152"
+      ],
+      "book_page_refs": [],
+      "instrument_refs_on_legal": [
+        {
+          "instrument": "200405260053152",
+          "classification": "later_instrument_on_legal_line",
+          "pax_search": "PAX Instrument Search \u2192 Instrument ID 200405260053152"
+        }
+      ],
+      "current_owner_instrument": "200405260053152",
+      "newcon_permit_not_a_deed": {
+        "date": "05/07/1999",
+        "number": "B90070030100",
+        "price": "90000",
+        "purpose": "NEWCON"
+      },
+      "pax_search_hints": [
+        "PAX Instrument Search \u2192 Instrument ID 200405260053152 (legal-line instrument; often the later RPI sale)",
+        "PAX Advanced/Legal Search \u2192 legal contains BROADLANDS SEC 13 LOT 42",
+        "PAX Name Search \u2192 first RPI buyer as grantee, then read grantor + earlier cross-refs"
+      ]
+    },
+    {
+      "lot": "46",
+      "pin": "156486275000",
+      "address": "42742 HOLLOWIND CT",
+      "clerk_original_deed_found": false,
+      "reason_still_unavailable": "Clerk PAX index requires a free occasional-user account; no public endpoint returned grantor, grantee, date, and price.",
+      "first_rpi_deed": {
+        "date": "2002-04-26",
+        "price": "$0",
+        "buyer": "JARRAL, RAVINDER S",
+        "seller": "",
+        "instrument": "",
+        "valuation": "N/A",
+        "note": ""
+      },
+      "rpi_legal_lines": [
+        "BROADLANDS SEC 13 LOT 46",
+        "2161--425 1769--79"
+      ],
+      "book_page_refs": [
+        {
+          "book": "2161",
+          "page": "425",
+          "classification": "later_deed_book_likely_post_2000",
+          "pax_search": "PAX Instrument Search \u2192 Book 2161 Page 425"
+        },
+        {
+          "book": "1769",
+          "page": "79",
+          "classification": "same_book_range_as_known_1999_2000_originals",
+          "pax_search": "PAX Instrument Search \u2192 Book 1769 Page 79"
+        }
+      ],
+      "instrument_refs_on_legal": [],
+      "current_owner_instrument": "201906110030858",
+      "newcon_permit_not_a_deed": {
+        "date": "11/02/1999",
+        "number": "B00035300100",
+        "price": "85000",
+        "purpose": "NEWCON"
+      },
+      "pax_search_hints": [
+        "PAX Instrument Search \u2192 Book 2161 Page 425 (likely a later deed, not the 1999\u20132000 builder sale)",
+        "PAX Instrument Search \u2192 Book 1769 Page 79 (best public pointer toward a possible original deed)",
+        "PAX Advanced/Legal Search \u2192 legal contains BROADLANDS SEC 13 LOT 46",
+        "PAX Name Search \u2192 first RPI buyer as grantee, then read grantor + earlier cross-refs"
+      ]
+    },
+    {
+      "lot": "50",
+      "pin": "156488855000",
+      "address": "42758 HOLLOWIND CT",
+      "clerk_original_deed_found": false,
+      "reason_still_unavailable": "Clerk PAX index requires a free occasional-user account; no public endpoint returned grantor, grantee, date, and price.",
+      "first_rpi_deed": {
+        "date": "2002-02-28",
+        "price": "$395,500",
+        "buyer": "ALBERS, EDWARD J & LAURALYN C",
+        "seller": "",
+        "instrument": "",
+        "valuation": "MARKET SALE",
+        "note": ""
+      },
+      "rpi_legal_lines": [
+        "BROADLANDS SEC 13 LOT 50",
+        "2122--873"
+      ],
+      "book_page_refs": [
+        {
+          "book": "2122",
+          "page": "873",
+          "classification": "later_deed_book_likely_post_2000",
+          "pax_search": "PAX Instrument Search \u2192 Book 2122 Page 873"
+        }
+      ],
+      "instrument_refs_on_legal": [],
+      "current_owner_instrument": "202105260059925",
+      "newcon_permit_not_a_deed": {
+        "date": "05/07/1999",
+        "number": "B90070080100",
+        "price": "90000",
+        "purpose": "NEWCON"
+      },
+      "pax_search_hints": [
+        "PAX Instrument Search \u2192 Book 2122 Page 873 (likely a later deed, not the 1999\u20132000 builder sale)",
+        "PAX Advanced/Legal Search \u2192 legal contains BROADLANDS SEC 13 LOT 50",
+        "PAX Name Search \u2192 first RPI buyer as grantee, then read grantor + earlier cross-refs"
+      ]
+    },
+    {
+      "lot": "51",
+      "pin": "156488648000",
+      "address": "42762 HOLLOWIND CT",
+      "clerk_original_deed_found": false,
+      "reason_still_unavailable": "Clerk PAX index requires a free occasional-user account; no public endpoint returned grantor, grantee, date, and price.",
+      "first_rpi_deed": {
+        "date": "2004-12-06",
+        "price": "$603,000",
+        "buyer": "HEWITT RELOCATION SERVICES INC",
+        "seller": "",
+        "instrument": "200412060129161",
+        "valuation": "MARKET SALE",
+        "note": ""
+      },
+      "rpi_legal_lines": [
+        "BROADLANDS SEC 13 LOT 51",
+        "200412060129162"
+      ],
+      "book_page_refs": [],
+      "instrument_refs_on_legal": [
+        {
+          "instrument": "200412060129162",
+          "classification": "later_instrument_on_legal_line",
+          "pax_search": "PAX Instrument Search \u2192 Instrument ID 200412060129162"
+        }
+      ],
+      "current_owner_instrument": "202107290081547",
+      "newcon_permit_not_a_deed": {
+        "date": "09/29/1999",
+        "number": "B00015820100",
+        "price": "95000",
+        "purpose": "NEWCON"
+      },
+      "pax_search_hints": [
+        "PAX Instrument Search \u2192 Instrument ID 200412060129162 (legal-line instrument; often the later RPI sale)",
+        "PAX Instrument Search \u2192 Instrument ID 200412060129161 (first RPI row \u2014 use Include Cross References)",
+        "PAX Advanced/Legal Search \u2192 legal contains BROADLANDS SEC 13 LOT 51",
+        "PAX Name Search \u2192 first RPI buyer as grantee, then read grantor + earlier cross-refs"
+      ]
+    },
+    {
+      "lot": "54",
+      "pin": "156489840000",
+      "address": "21651 STILLBROOK FARM DR",
+      "clerk_original_deed_found": false,
+      "reason_still_unavailable": "Clerk PAX index requires a free occasional-user account; no public endpoint returned grantor, grantee, date, and price.",
+      "first_rpi_deed": {
+        "date": "2002-03-20",
+        "price": "$394,900",
+        "buyer": "CLARK, ROBERT W & CAROLYN B",
+        "seller": "",
+        "instrument": "",
+        "valuation": "MARKET SALE",
+        "note": ""
+      },
+      "rpi_legal_lines": [
+        "BROADLANDS SEC 13 LOT 54",
+        "2135--2239"
+      ],
+      "book_page_refs": [
+        {
+          "book": "2135",
+          "page": "2239",
+          "classification": "later_deed_book_likely_post_2000",
+          "pax_search": "PAX Instrument Search \u2192 Book 2135 Page 2239"
+        }
+      ],
+      "instrument_refs_on_legal": [],
+      "current_owner_instrument": "202408290036831",
+      "newcon_permit_not_a_deed": {
+        "date": "03/17/2000",
+        "number": "B10009960100",
+        "price": "125000",
+        "purpose": "NEWCON"
+      },
+      "pax_search_hints": [
+        "PAX Instrument Search \u2192 Book 2135 Page 2239 (likely a later deed, not the 1999\u20132000 builder sale)",
+        "PAX Advanced/Legal Search \u2192 legal contains BROADLANDS SEC 13 LOT 54",
+        "PAX Name Search \u2192 first RPI buyer as grantee, then read grantor + earlier cross-refs"
+      ]
+    }
+  ]
+}

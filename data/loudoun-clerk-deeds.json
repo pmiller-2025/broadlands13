@@ -1,0 +1,5 @@
+{
+  "source": "Loudoun Clerk of the Circuit Court PAX index — add a row only when grantor, grantee, and date are on the clerk index (price only if the index shows consideration).",
+  "note": "Empty on purpose. The 2026-09-11 public-path lookup could not complete a PAX session. Rebuild merges these onto map sales (oldest first) without inventing fields.",
+  "deeds": []
+}
